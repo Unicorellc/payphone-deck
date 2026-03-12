@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payphone — Project Ring</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --orange: #F26522;
+  --orange-glow: rgba(242,101,34,0.4);
+  --purple: #7c3aed;
+  --purple-deep: #4c1d95;
+  --blue: #3b82f6;
+  --cyan: #06b6d4;
+  --pink: #ec4899;
+  --dark: #030014;
+  --dark-2: #0a0520;
+  --glass: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --green: #22c55e;
+  --red: #ef4444;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--dark);
+  color: #fff;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== PASSWORD GATE ===== */
+#password-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+#password-gate.hidden {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+#password-gate .gate-orb {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--orange), var(--purple-deep), transparent);
+  filter: blur(40px);
+  position: absolute;
+  animation: orbFloat 8s ease-in-out infinite;
+  opacity: 0.5;
+}
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, -30px) scale(1.2); }
+}
+.gate-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+.gate-logo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--orange);
+  margin-bottom: 8px;
+}
+.gate-subtitle {
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 48px;
+}
+.gate-input-wrap {
+  position: relative;
+  width: 320px;
+}
+.gate-input-wrap input {
+  width: 100%;
+  padding: 16px 56px 16px 20px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 16px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.gate-input-wrap input:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 30px rgba(242,101,34,0.15);
+}
+.gate-input-wrap input::placeholder { color: rgba(255,255,255,0.25); }
+.gate-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--orange);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.gate-btn:hover { transform: translateY(-50%) scale(1.05); box-shadow: 0 0 20px var(--orange-glow); }
+.gate-btn svg { width: 18px; height: 18px; fill: #fff; }
+.gate-error {
+  color: var(--red);
+  font-size: 13px;
+  margin-top: 12px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.gate-error.show { opacity: 1; }
+
+/* ===== MAIN CONTENT ===== */
+#main-content {
+  display: none;
+  opacity: 0;
+  transition: opacity 1s ease 0.3s;
+}
+#main-content.visible {
+  display: block;
+  opacity: 1;
+}
+
+/* ===== CANVAS BG ===== */
+#bg-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ===== NAV ===== */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 20px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(20px);
+  background: rgba(3,0,20,0.6);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: transform 0.4s;
+}
+.nav-logo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--orange);
+}
+.nav-dots {
+  display: flex;
+  gap: 8px;
+}
+.nav-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.nav-dot.active {
+  background: var(--orange);
+  box-shadow: 0 0 12px var(--orange-glow);
+  width: 24px;
+  border-radius: 4px;
+}
+.nav-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 1px;
+}
+
+/* ===== SECTIONS ===== */
+section {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 120px 80px 80px;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  section { padding: 100px 24px 60px; }
+  .nav { padding: 16px 24px; }
+}
+
+/* ===== REVEAL ANIMATIONS ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.15s; }
+.reveal-delay-2 { transition-delay: 0.3s; }
+.reveal-delay-3 { transition-delay: 0.45s; }
+.reveal-delay-4 { transition-delay: 0.6s; }
+
+/* ===== GLOW ORBS ===== */
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* ===== TYPOGRAPHY ===== */
+.section-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.mega {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(64px, 12vw, 160px);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -4px;
+  background: linear-gradient(135deg, var(--orange), var(--pink), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(28px, 4.5vw, 56px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  max-width: 900px;
+}
+
+.subtitle {
+  font-size: clamp(16px, 1.8vw, 20px);
+  font-weight: 400;
+  line-height: 1.65;
+  color: rgba(255,255,255,0.5);
+  max-width: 640px;
+  margin-top: 16px;
+}
+
+/* ===== GLASS CARDS ===== */
+.glass {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  padding: 32px;
+  transition: transform 0.4s, border-color 0.4s, box-shadow 0.4s;
+}
+.glass:hover {
+  transform: translateY(-4px);
+  border-color: rgba(242,101,34,0.2);
+  box-shadow: 0 20px 60px rgba(242,101,34,0.08);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 48px;
+  max-width: 1000px;
+}
+@media (max-width: 900px) {
+  .card-grid { grid-template-columns: 1fr; }
+}
+
+.card-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 40px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--orange), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.card-label {
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.5;
+}
+
+/* ===== COUNTER ANIMATION ===== */
+.counter { display: inline-block; }
+
+/* ===== PROBLEM SLIDE ===== */
+.crime-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--red);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+/* ===== SOLUTION SLIDE ===== */
+.solution-wrap {
+  background: linear-gradient(135deg, rgba(242,101,34,0.12), rgba(124,58,237,0.08));
+  border: 1px solid rgba(242,101,34,0.15);
+  border-radius: 24px;
+  padding: 48px;
+  margin-top: 40px;
+  max-width: 900px;
+  position: relative;
+  overflow: hidden;
+}
+.solution-wrap::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, var(--orange-glow), transparent 70%);
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+.pill {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.3s;
+  cursor: default;
+}
+.pill:hover {
+  background: var(--orange);
+  border-color: var(--orange);
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px var(--orange-glow);
+}
+
+/* ===== MOAT SLIDE ===== */
+.moat-card {
+  background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(6,182,212,0.05));
+  border: 1px solid rgba(124,58,237,0.15);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 20px;
+  max-width: 800px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.moat-card:hover {
+  transform: translateX(8px);
+  box-shadow: -4px 0 30px rgba(124,58,237,0.15);
+}
+.moat-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--purple);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.moat-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.moat-desc {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.6;
+}
+
+/* ===== UNIT ECON ===== */
+.econ-flow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+.econ-step {
+  padding: 24px 28px;
+  border-radius: 14px;
+  text-align: center;
+  min-width: 130px;
+  transition: transform 0.3s;
+}
+.econ-step:hover { transform: scale(1.06); }
+.econ-step .e-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.econ-step .e-label { font-size: 12px; opacity: 0.5; }
+.econ-arrow {
+  font-size: 20px;
+  color: rgba(255,255,255,0.15);
+}
+
+/* ===== 2x2 GRID ===== */
+.quad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin-top: 40px;
+  max-width: 800px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+@media (max-width: 700px) { .quad { grid-template-columns: 1fr; } }
+.quad-cell {
+  padding: 32px;
+  background: rgba(255,255,255,0.03);
+  transition: background 0.3s;
+}
+.quad-cell:hover { background: rgba(255,255,255,0.06); }
+.quad-cell.winner {
+  background: linear-gradient(135deg, var(--orange), var(--purple-deep));
+  position: relative;
+}
+.quad-cell.winner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15), transparent 60%);
+  pointer-events: none;
+}
+.q-title { font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+.q-names { font-size: 13px; opacity: 0.55; line-height: 1.6; }
+.quad-cell.winner .q-names { opacity: 0.85; }
+
+/* ===== FLYWHEEL ===== */
+.flywheel-ring {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 40px;
+  justify-content: center;
+  max-width: 900px;
+}
+.fw-step {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.4s;
+  cursor: default;
+  padding: 16px;
+}
+.fw-step:hover {
+  background: rgba(242,101,34,0.1);
+  border-color: var(--orange);
+  transform: scale(1.1);
+  box-shadow: 0 0 40px rgba(242,101,34,0.15);
+}
+.fw-step .fw-icon { font-size: 28px; margin-bottom: 6px; }
+.fw-step .fw-text { font-size: 12px; font-weight: 600; line-height: 1.3; }
+.fw-connector { align-self: center; color: var(--orange); font-size: 24px; }
+
+/* ===== TEAM ===== */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 40px;
+  max-width: 960px;
+}
+@media (max-width: 900px) { .team-grid { grid-template-columns: 1fr; } }
+.team-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 28px;
+  transition: all 0.4s;
+  cursor: default;
+}
+.team-card:hover {
+  border-color: rgba(242,101,34,0.3);
+  box-shadow: 0 12px 40px rgba(242,101,34,0.08);
+  transform: translateY(-4px);
+}
+.team-card .t-init {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--orange), var(--purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+.team-card .t-name { font-size: 17px; font-weight: 700; }
+.team-card .t-role { font-size: 13px; color: var(--orange); font-weight: 600; margin-bottom: 10px; }
+.team-card .t-cred { font-size: 13px; color: rgba(255,255,255,0.4); line-height: 1.55; }
+
+/* ===== FINANCIALS TABLE ===== */
+.fin-table {
+  width: 100%;
+  max-width: 900px;
+  border-collapse: collapse;
+  margin-top: 32px;
+  font-size: 14px;
+}
+.fin-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.3);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.fin-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.2s;
+}
+.fin-table tr:hover td { background: rgba(255,255,255,0.02); }
+.fin-table .hl { color: var(--orange); font-weight: 700; }
+.fin-table .neg { color: var(--red); }
+.fin-table .pos { color: var(--green); font-weight: 700; }
+
+/* ===== ASK SLIDE ===== */
+.ask-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 48px;
+  max-width: 900px;
+}
+@media (max-width: 900px) { .ask-grid { grid-template-columns: 1fr 1fr; } }
+.ask-block {
+  text-align: center;
+  padding: 32px 20px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.4s;
+  cursor: default;
+}
+.ask-block:hover {
+  border-color: var(--orange);
+  background: rgba(242,101,34,0.06);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(242,101,34,0.1);
+}
+.ask-pct {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--orange), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.ask-label { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.ask-desc { font-size: 12px; opacity: 0.35; line-height: 1.4; }
+
+.closing-text {
+  font-size: clamp(18px, 2.2vw, 24px);
+  line-height: 1.6;
+  max-width: 760px;
+  margin-top: 48px;
+  color: rgba(255,255,255,0.55);
+}
+.closing-text strong {
+  background: linear-gradient(135deg, var(--orange), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+/* ===== STRESS BOX ===== */
+.stress-box {
+  margin-top: 28px;
+  padding: 24px 28px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(34,197,94,0.06), rgba(6,182,212,0.04));
+  border: 1px solid rgba(34,197,94,0.15);
+  max-width: 800px;
+}
+.stress-box .s-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 6px;
+}
+.stress-box .s-body {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.6;
+}
+
+/* ===== MARKET FUNNEL ===== */
+.funnel {
+  margin-top: 40px;
+  max-width: 500px;
+}
+.funnel-step {
+  padding: 20px 28px;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.3s;
+  cursor: default;
+}
+.funnel-step:hover { transform: scale(1.02); }
+.funnel-step .f-label { font-size: 14px; opacity: 0.7; }
+.funnel-step .f-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* ===== TWO COL ===== */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  margin-top: 40px;
+  max-width: 1000px;
+}
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; gap: 32px; } }
+
+/* ===== SCROLL PROGRESS ===== */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--orange), var(--pink), var(--purple));
+  z-index: 200;
+  width: 0%;
+  transition: width 0.1s;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== SCROLL PROGRESS ===== -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- ===== PASSWORD GATE ===== -->
+<div id="password-gate">
+  <div class="gate-orb" style="top: 20%; left: 30%;"></div>
+  <div class="gate-orb" style="bottom: 20%; right: 25%; animation-delay: -3s; background: radial-gradient(circle, var(--purple), transparent);"></div>
+  <div class="gate-content">
+    <div class="gate-logo">payphone</div>
+    <div class="gate-subtitle">Project Ring &bull; Confidential</div>
+    <div class="gate-input-wrap">
+      <input type="password" id="passwordInput" placeholder="Enter access code" autocomplete="off" />
+      <button class="gate-btn" id="passwordBtn" aria-label="Submit">
+        <svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="gate-error" id="gateError">Invalid access code. Try again.</div>
+  </div>
+</div>
+
+<!-- ===== BACKGROUND CANVAS ===== -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- ===== NAV ===== -->
+<nav class="nav" id="mainNav" style="display:none;">
+  <div class="nav-logo">payphone</div>
+  <div class="nav-dots" id="navDots"></div>
+  <div class="nav-label" id="navLabel">01 / 13</div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div id="main-content">
+
+<!-- S0: COVER -->
+<section data-label="Cover" style="justify-content: flex-end; padding-bottom: 15vh;">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,var(--orange-glow),transparent 70%);top:-10%;right:-10%;"></div>
+  <div class="glow-orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(124,58,237,0.2),transparent 70%);bottom:10%;left:-5%;"></div>
+  <div class="reveal" style="margin-bottom: 12px;">
+    <span style="display:inline-block;padding:6px 16px;border:1px solid rgba(255,255,255,0.1);border-radius:20px;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.35);text-transform:uppercase;">Confidential &bull; Winter 2026</span>
+  </div>
+  <div class="mega reveal reveal-delay-1">payphone</div>
+  <div class="subtitle reveal reveal-delay-2" style="font-size: clamp(18px, 2.2vw, 24px); margin-top: 20px;">
+    The financial platform for Latin America's<br>27 million migrants in the United States.
+  </div>
+  <div class="reveal reveal-delay-3" style="margin-top: 40px; display: flex; gap: 40px; font-size: 13px; color: rgba(255,255,255,0.25);">
+    <span>$30M Equity Raise</span>
+    <span>Project Ring</span>
+    <span>Origin Merchant Partners</span>
+  </div>
+</section>
+
+<!-- S1: DECLARATION -->
+<section data-label="Declaration">
+  <div class="glow-orb" style="width:600px;height:600px;background:radial-gradient(circle,rgba(242,101,34,0.15),transparent 70%);top:0;right:0;"></div>
+  <div class="section-num reveal">01 &mdash; Declaration</div>
+  <div class="mega reveal reveal-delay-1">$361M</div>
+  <div class="title reveal reveal-delay-2" style="margin-top: 12px;">processed last year &mdash; growing 52% annually &mdash; with no U.S. presence yet.</div>
+  <div class="card-grid reveal reveal-delay-3">
+    <div class="glass">
+      <div class="card-num"><span class="counter" data-target="143" data-suffix="K">0</span></div>
+      <div class="card-label">Active users across 15 countries making 465+ payments per minute</div>
+    </div>
+    <div class="glass">
+      <div class="card-num"><span class="counter" data-target="6.1" data-suffix="x" data-decimals="1">0</span></div>
+      <div class="card-label">LTV/CAC ratio with unit economics improving every quarter</div>
+    </div>
+    <div class="glass">
+      <div class="card-num"><span class="counter" data-target="24" data-suffix="%">0</span></div>
+      <div class="card-label">Adj. EBITDA margin &mdash; profitable before the growth investment</div>
+    </div>
+  </div>
+</section>
+
+<!-- S2: MARKET TRUTH -->
+<section data-label="Market Truth">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(6,182,212,0.12),transparent 70%);bottom:0;left:0;"></div>
+  <div class="section-num reveal">02 &mdash; Market Truth</div>
+  <div class="title reveal reveal-delay-1">27 million LATAM migrants in the U.S. are underbanked, overcharged, and sending $115B home every year.</div>
+  <div class="card-grid reveal reveal-delay-2">
+    <div class="glass">
+      <div class="card-num"><span class="counter" data-target="23" data-suffix="%">0</span></div>
+      <div class="card-label">of LATAM households in the U.S. report having no bank account</div>
+    </div>
+    <div class="glass">
+      <div class="card-num"><span class="counter" data-target="89" data-suffix="%">0</span></div>
+      <div class="card-label">of digital remittances are now initiated via mobile platform</div>
+    </div>
+    <div class="glass">
+      <div class="card-num">$115B+</div>
+      <div class="card-label">flows annually U.S. to LATAM &mdash; 60-70% of all LATAM remittances</div>
+    </div>
+  </div>
+</section>
+
+<!-- S3: PROBLEM -->
+<section data-label="The Problem">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(239,68,68,0.1),transparent 70%);top:10%;right:10%;"></div>
+  <div class="section-num reveal">03 &mdash; The Problem</div>
+  <div class="title reveal reveal-delay-1">A migrant worker in Houston loses $780 a year just trying to send money home.</div>
+  <div class="subtitle reveal reveal-delay-2">No U.S. ID. No credit history. No SSN. Banks won't open an account. Western Union charges $15 per transfer. Check cashers take 3%. The average LATAM migrant makes 26 remittances per year.</div>
+  <div class="card-grid reveal reveal-delay-3">
+    <div class="glass" style="border-color: rgba(239,68,68,0.15);">
+      <div class="crime-num">$15</div>
+      <div class="card-label">Average fee per remittance via Western Union or MoneyGram</div>
+    </div>
+    <div class="glass" style="border-color: rgba(239,68,68,0.15);">
+      <div class="crime-num">3-5 days</div>
+      <div class="card-label">Typical delivery time for a traditional wire transfer to LATAM</div>
+    </div>
+    <div class="glass" style="border-color: rgba(239,68,68,0.15);">
+      <div class="crime-num">0</div>
+      <div class="card-label">Solutions combining wallet + card + P2P + remittance for migrants</div>
+    </div>
+  </div>
+</section>
+
+<!-- S4: SOLUTION -->
+<section data-label="The Solution">
+  <div class="glow-orb" style="width:600px;height:600px;background:radial-gradient(circle,var(--orange-glow),transparent 70%);top:-20%;left:-10%;opacity:0.2;"></div>
+  <div class="section-num reveal">04 &mdash; What We Do</div>
+  <div class="title reveal reveal-delay-1" style="background: linear-gradient(135deg, #fff, rgba(255,255,255,0.8)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">One app to earn, save, send, and spend &mdash; built for people the banks forgot.</div>
+  <div class="solution-wrap reveal reveal-delay-2">
+    <div style="font-size: 16px; line-height: 1.7; color: rgba(255,255,255,0.7); position: relative; z-index: 1;">
+      Payphone is a mobile-first financial platform that lets migrants load funds, send cross-border remittances at near-zero cost, get a Mastercard for daily spending, and withdraw cash from any ATM &mdash; all without a bank account, SSN, or credit history.
+    </div>
+    <div class="pill-row" style="position: relative; z-index: 1;">
+      <div class="pill">Tap to Pay</div>
+      <div class="pill">QR Code</div>
+      <div class="pill">Payment Link</div>
+      <div class="pill">P2P Transfers</div>
+      <div class="pill">Virtual Card</div>
+      <div class="pill">Physical Mastercard</div>
+      <div class="pill">ATM Withdrawal</div>
+      <div class="pill">Wallet</div>
+      <div class="pill">Cross-Border</div>
+    </div>
+  </div>
+  <div class="card-grid reveal reveal-delay-3" style="margin-top: 28px;">
+    <div class="glass">
+      <div class="card-num">9</div>
+      <div class="card-label">Ways to make and receive payments</div>
+    </div>
+    <div class="glass">
+      <div class="card-num">0%</div>
+      <div class="card-label">Cost for P2P transfers within the ecosystem</div>
+    </div>
+    <div class="glass">
+      <div class="card-num">&lt;48h</div>
+      <div class="card-label">Full onboarding &mdash; no branch visit required</div>
+    </div>
+  </div>
+</section>
+
+<!-- S5: UNFAIR ADVANTAGE -->
+<section data-label="Why We Win">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(124,58,237,0.12),transparent 70%);top:0;right:0;"></div>
+  <div class="section-num reveal">05 &mdash; Why We Win</div>
+  <div class="title reveal reveal-delay-1">We own both sides of the remittance corridor. No competitor can say that.</div>
+  <div style="margin-top: 40px;">
+    <div class="moat-card reveal reveal-delay-2">
+      <div class="moat-num">MOAT 01</div>
+      <div class="moat-title">Two-Sided Network Effect</div>
+      <div class="moat-desc">A migrant in New York sends money through Payphone. Their mother in Quito receives it in her Payphone wallet and spends it at a Payphone merchant. We capture economics on both ends. Wise, Remitly, and Western Union only process one side. Every new user on either end strengthens the network.</div>
+    </div>
+    <div class="moat-card reveal reveal-delay-3">
+      <div class="moat-num">MOAT 02</div>
+      <div class="moat-title">12-Year Regulatory Head Start</div>
+      <div class="moat-desc">10+ certifications across 15 countries. 8 independent AML audits &mdash; zero critical findings. PCI-DSS compliant. A new entrant needs 3-5 years and $10M+ just to replicate our compliance infrastructure.</div>
+    </div>
+    <div class="moat-card reveal reveal-delay-4" style="border-color: rgba(242,101,34,0.2); background: linear-gradient(135deg, rgba(242,101,34,0.08), rgba(239,68,68,0.04));">
+      <div class="moat-num" style="color: var(--orange);">RISK &mdash; ADDRESSED</div>
+      <div class="moat-title">Can You Acquire U.S. Users at Viable Economics?</div>
+      <div class="moat-desc">We don't acquire from zero. Our 1M+ LATAM users have family in the U.S. The U.S. user is the other end of an existing transaction. Our LATAM base is our U.S. distribution channel. Community-led acquisition, not paid ads. Projected U.S. CAC: ~$75/user &mdash; budgeted and stress-tested.</div>
+    </div>
+  </div>
+</section>
+
+<!-- S6: TRACTION -->
+<section data-label="Traction">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(34,197,94,0.1),transparent 70%);bottom:0;right:0;"></div>
+  <div class="section-num reveal">06 &mdash; Traction</div>
+  <div class="title reveal reveal-delay-1">Revenue has compounded at 52% for three years &mdash; and the engine is accelerating.</div>
+  <div class="two-col reveal reveal-delay-2">
+    <div>
+      <div style="font-size: 12px; opacity: 0.3; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Revenue (US$ millions)</div>
+      <div style="display:flex; align-items:flex-end; gap:20px; height:180px;">
+        <div style="flex:1;text-align:center;">
+          <div style="font-size:14px;font-weight:700;color:var(--orange);margin-bottom:4px;">$3.9</div>
+          <div style="height:34px;background:rgba(242,101,34,0.25);border-radius:6px 6px 0 0;"></div>
+          <div style="font-size:11px;opacity:0.3;margin-top:4px;">2022</div>
+        </div>
+        <div style="flex:1;text-align:center;">
+          <div style="font-size:14px;font-weight:700;color:var(--orange);margin-bottom:4px;">$6.9</div>
+          <div style="height:60px;background:rgba(242,101,34,0.35);border-radius:6px 6px 0 0;"></div>
+          <div style="font-size:11px;opacity:0.3;margin-top:4px;">2023</div>
+        </div>
+        <div style="flex:1;text-align:center;">
+          <div style="font-size:14px;font-weight:700;color:var(--orange);margin-bottom:4px;">$9.7</div>
+          <div style="height:86px;background:rgba(242,101,34,0.5);border-radius:6px 6px 0 0;"></div>
+          <div style="font-size:11px;opacity:0.3;margin-top:4px;">2024</div>
+        </div>
+        <div style="flex:1;text-align:center;">
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">$13.7</div>
+          <div style="height:120px;background:linear-gradient(to top, var(--orange), var(--pink));border-radius:6px 6px 0 0;box-shadow:0 0 30px var(--orange-glow);"></div>
+          <div style="font-size:11px;opacity:0.3;margin-top:4px;">2025</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="margin-bottom:20px;">
+        <span style="font-family:'Space Grotesk';font-size:32px;font-weight:700;color:var(--orange);">52%</span>
+        <span style="font-size:14px;opacity:0.4;margin-left:8px;">Revenue CAGR (2022-2025)</span>
+      </div>
+      <div style="margin-bottom:20px;">
+        <span style="font-family:'Space Grotesk';font-size:32px;font-weight:700;color:var(--orange);">$96</span>
+        <span style="font-size:14px;opacity:0.4;margin-left:8px;">ARPU (up from $52 in 2023)</span>
+      </div>
+      <div style="margin-bottom:20px;">
+        <span style="font-family:'Space Grotesk';font-size:32px;font-weight:700;color:var(--orange);">54%</span>
+        <span style="font-size:14px;opacity:0.4;margin-left:8px;">Individual conversion rate (was 21%)</span>
+      </div>
+      <div>
+        <span style="font-family:'Space Grotesk';font-size:32px;font-weight:700;color:var(--green);">0.17%</span>
+        <span style="font-size:14px;opacity:0.4;margin-left:8px;">Fraud rate (down from 0.38%)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S7: BUSINESS MODEL -->
+<section data-label="Business Model">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(242,101,34,0.1),transparent 70%);top:10%;left:-10%;"></div>
+  <div class="section-num reveal">07 &mdash; Business Model</div>
+  <div class="title reveal reveal-delay-1">Every dollar that enters the ecosystem pays us up to three times.</div>
+  <div class="subtitle reveal reveal-delay-2">User loads $100. We earn 5% on entry (wallet). We earn interest on float. We earn a fee on exit (banking). The user retains $95. No subscription. No hidden charges.</div>
+
+  <div class="econ-flow reveal reveal-delay-3">
+    <div class="econ-step" style="background: rgba(242,101,34,0.08); border: 1px solid rgba(242,101,34,0.2); border-radius: 14px;">
+      <div class="e-val" style="color: var(--orange);">$38</div>
+      <div class="e-label">CAC</div>
+    </div>
+    <div class="econ-arrow">&rarr;</div>
+    <div class="econ-step" style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); border-radius: 14px;">
+      <div class="e-val" style="color: var(--green);">$232</div>
+      <div class="e-label">Lifetime Value</div>
+    </div>
+    <div class="econ-arrow">&rarr;</div>
+    <div class="econ-step" style="background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.2); border-radius: 14px;">
+      <div class="e-val" style="color: var(--purple);">6.1x</div>
+      <div class="e-label">LTV / CAC</div>
+    </div>
+    <div class="econ-arrow">&rarr;</div>
+    <div class="econ-step" style="background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2); border-radius: 14px;">
+      <div class="e-val" style="color: var(--cyan);">&lt;6mo</div>
+      <div class="e-label">Payback</div>
+    </div>
+  </div>
+
+  <table class="fin-table reveal reveal-delay-4">
+    <thead><tr><th>Stream</th><th>2025A Rev</th><th>% Total</th><th>CAGR '25-'29</th><th>How it works</th></tr></thead>
+    <tbody>
+      <tr><td style="font-weight:600;">Wallet</td><td class="hl">$11.6M</td><td>85%</td><td class="hl">68%</td><td style="opacity:0.5">5% commission on every dollar loaded</td></tr>
+      <tr><td style="font-weight:600;">Interest</td><td class="hl">$1.0M</td><td>7%</td><td class="hl">41%</td><td style="opacity:0.5">Float yield on wallet balances</td></tr>
+      <tr><td style="font-weight:600;">Banking</td><td class="hl">$0.2M</td><td>1%</td><td class="hl">166%</td><td style="opacity:0.5">~$0.18 flat fee per withdraw/spend txn</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- S8: MARKET SIZE -->
+<section data-label="Market Size">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(6,182,212,0.08),transparent 70%);bottom:0;right:0;"></div>
+  <div class="section-num reveal">08 &mdash; Market Size</div>
+  <div class="title reveal reveal-delay-1">Bottom-up: $3.3B in serviceable revenue from corridors we already know.</div>
+
+  <div class="two-col reveal reveal-delay-2">
+    <div>
+      <div style="font-size:13px;opacity:0.3;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">U.S. Expansion &mdash; Bottoms Up</div>
+      <div class="funnel">
+        <div class="funnel-step" style="background: linear-gradient(135deg, rgba(242,101,34,0.15), rgba(242,101,34,0.05));">
+          <span class="f-label">LATAM migrants in 4 target states</span>
+          <span class="f-val" style="color:var(--orange);">7.1M</span>
+        </div>
+        <div class="funnel-step" style="background: linear-gradient(135deg, rgba(242,101,34,0.12), rgba(242,101,34,0.04));">
+          <span class="f-label">&times; 23% underbanked rate</span>
+          <span class="f-val" style="color:var(--orange);">1.6M</span>
+        </div>
+        <div class="funnel-step" style="background: linear-gradient(135deg, rgba(242,101,34,0.1), rgba(242,101,34,0.03));">
+          <span class="f-label">&times; $2,500 GTV/user &times; 5% take</span>
+          <span class="f-val" style="color:var(--orange);">$200M</span>
+        </div>
+        <div class="funnel-step" style="background: linear-gradient(135deg, rgba(242,101,34,0.2), rgba(124,58,237,0.08)); border: 1px solid rgba(242,101,34,0.2);">
+          <span class="f-label">Our 2029E target: 3% pen.</span>
+          <span class="f-val" style="color:var(--orange);">~$65M</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;opacity:0.3;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">Full Serviceable Market</div>
+      <div class="glass" style="margin-bottom:16px;">
+        <div style="font-size:14px;opacity:0.5;">LATAM digital payments (2027E)</div>
+        <div class="card-num">$300B</div>
+      </div>
+      <div class="glass" style="margin-bottom:16px;">
+        <div style="font-size:14px;opacity:0.5;">Ecuadorian remittances alone</div>
+        <div class="card-num">$7B/yr</div>
+      </div>
+      <div class="glass" style="border-color: rgba(242,101,34,0.2); background: rgba(242,101,34,0.05);">
+        <div style="font-size:14px;opacity:0.5;">Total serviceable revenue (LATAM + U.S.)</div>
+        <div style="font-family:'Space Grotesk';font-size:48px;font-weight:700;background:linear-gradient(135deg,var(--orange),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;">$3.3B</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- S9: COMPETITION -->
+<section data-label="Competition">
+  <div class="section-num reveal">09 &mdash; Competition</div>
+  <div class="title reveal reveal-delay-1">Incumbents own one leg of the journey. We own the whole trip.</div>
+  <div class="subtitle reveal reveal-delay-2">Every competitor solves one piece. None of them are the primary financial account for an underbanked migrant.</div>
+
+  <div class="axis-y-label reveal reveal-delay-3" style="margin-top:32px;">Migrant-Specific &uarr;</div>
+  <div class="quad reveal reveal-delay-3">
+    <div class="quad-cell winner">
+      <div class="q-title" style="position:relative;z-index:1;">Full Ecosystem + Migrant-First</div>
+      <div class="q-names" style="position:relative;z-index:1;">Payphone &mdash; Wallet + Card + P2P + Remittance + Merchant POS. Both sides. Zero-cost P2P. &lt;48h onboarding.</div>
+    </div>
+    <div class="quad-cell">
+      <div class="q-title">Migrant-Focused, Limited Product</div>
+      <div class="q-names">Majority &mdash; U.S. banking only<br>peiGo &mdash; Prepaid + top-ups<br>Single product, no lock-in</div>
+    </div>
+    <div class="quad-cell">
+      <div class="q-title">Broad Fintech, Not Migrant-Built</div>
+      <div class="q-names">PayPal &bull; Mercado Pago &bull; dLocal<br>Not designed for underbanked or undocumented users</div>
+    </div>
+    <div class="quad-cell">
+      <div class="q-title">Remittance-Only Pipes</div>
+      <div class="q-names">Western Union &bull; Remitly &bull; Wise<br>One-way transfer. No wallet. No ecosystem.</div>
+    </div>
+  </div>
+  <div class="reveal reveal-delay-4" style="font-size:11px;opacity:0.2;text-transform:uppercase;letter-spacing:1.5px;margin-top:10px;max-width:800px;text-align:center;">&larr; Single Product &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Full Ecosystem &rarr;</div>
+</section>
+
+<!-- S10: FLYWHEEL -->
+<section data-label="Distribution">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(242,101,34,0.08),transparent 70%);top:20%;left:40%;"></div>
+  <div class="section-num reveal">10 &mdash; Distribution</div>
+  <div class="title reveal reveal-delay-1">The receiver becomes the sender. The sender becomes the merchant. The network sells itself.</div>
+
+  <div class="flywheel-ring reveal reveal-delay-2">
+    <div class="fw-step"><div class="fw-icon">&#x1F4B5;</div><div class="fw-text">Migrant loads funds in U.S.</div></div>
+    <div class="fw-connector">&rarr;</div>
+    <div class="fw-step"><div class="fw-icon">&#x1F30E;</div><div class="fw-text">Sends to family via P2P</div></div>
+    <div class="fw-connector">&rarr;</div>
+    <div class="fw-step"><div class="fw-icon">&#x1F6D2;</div><div class="fw-text">Family spends at local merchant</div></div>
+    <div class="fw-connector">&rarr;</div>
+    <div class="fw-step"><div class="fw-icon">&#x1F4F1;</div><div class="fw-text">Merchant onboards to Payphone</div></div>
+    <div class="fw-connector">&rarr;</div>
+    <div class="fw-step" style="border-color:var(--orange);box-shadow:0 0 30px rgba(242,101,34,0.1);"><div class="fw-icon">&#x1F504;</div><div class="fw-text" style="color:var(--orange);">Network compounds</div></div>
+  </div>
+
+  <div class="card-grid reveal reveal-delay-3" style="margin-top:36px;">
+    <div class="glass">
+      <div class="card-num">70%</div>
+      <div class="card-label">of new LATAM users came through word-of-mouth in 2025</div>
+    </div>
+    <div class="glass">
+      <div class="card-num">4+ yrs</div>
+      <div class="card-label">Average merchant tenure &mdash; deep platform stickiness</div>
+    </div>
+    <div class="glass">
+      <div class="card-num">Community</div>
+      <div class="card-label">U.S. GTM: churches, migrant orgs, local businesses &mdash; not paid ads</div>
+    </div>
+  </div>
+</section>
+
+<!-- S11: TEAM -->
+<section data-label="Team">
+  <div class="section-num reveal">11 &mdash; Team</div>
+  <div class="title reveal reveal-delay-1">120 people. 15 countries. 80+ combined years building payments in LATAM.</div>
+  <div class="team-grid reveal reveal-delay-2">
+    <div class="team-card">
+      <div class="t-init">JE</div>
+      <div class="t-name">Juan Jos&eacute; Espinoza</div>
+      <div class="t-role">Co-Founder & CEO</div>
+      <div class="t-cred">Built Payphone from zero to $361M GTV over 12 years. 15+ years in fintech, telecom, and digital payments across LATAM.</div>
+    </div>
+    <div class="team-card">
+      <div class="t-init">JV</div>
+      <div class="t-name">Juan Diego Vasquez</div>
+      <div class="t-role">Co-Founder & CTO</div>
+      <div class="t-cred">Architected platform processing 465+ payments/min. Reduced fraud from 0.38% to 0.17% in 12 months.</div>
+    </div>
+    <div class="team-card">
+      <div class="t-init">HC</div>
+      <div class="t-name">Hernan Coellar</div>
+      <div class="t-role">CFO</div>
+      <div class="t-cred">Took EBITDA margin from -32% to +24% in three years while growing 52% CAGR. Led card and Tap-to-Phone monetization.</div>
+    </div>
+    <div class="team-card">
+      <div class="t-init">PI</div>
+      <div class="t-name">Pedro Infante</div>
+      <div class="t-role">Chief Compliance</div>
+      <div class="t-cred">8 AML audits, zero critical findings. Built compliance across 15+ jurisdictions. 14 years BSA/AML.</div>
+    </div>
+    <div class="team-card">
+      <div class="t-init">JB</div>
+      <div class="t-name">Jordan Butler</div>
+      <div class="t-role">Chief Growth</div>
+      <div class="t-cred">$25M+ lifetime sales, ~$9M raised. Leading U.S. go-to-market across 4 target states.</div>
+    </div>
+    <div class="team-card">
+      <div class="t-init">LV</div>
+      <div class="t-name">Lucia Vintimilla</div>
+      <div class="t-role">Chief Strategy</div>
+      <div class="t-cred">20+ years driving transformation across fintech, retail, and agribusiness in LATAM.</div>
+    </div>
+  </div>
+  <div class="reveal reveal-delay-3" style="margin-top:20px;font-size:13px;opacity:0.25;">+ Carlos Flores (COO) &bull; Martin Burbano (CLO) &bull; 120+ FTEs &bull; 74% retention &bull; 66% eNPS</div>
+</section>
+
+<!-- S12: FINANCIALS -->
+<section data-label="Financials">
+  <div class="glow-orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(34,197,94,0.08),transparent 70%);bottom:10%;right:10%;"></div>
+  <div class="section-num reveal">12 &mdash; Financials</div>
+  <div class="title reveal reveal-delay-1">$105M revenue by 2029. EBITDA-positive by 2028. Market leader by 2030.</div>
+
+  <table class="fin-table reveal reveal-delay-2">
+    <thead><tr><th></th><th>2025A</th><th>2026E</th><th>2027E</th><th>2028E</th><th>2029E</th></tr></thead>
+    <tbody>
+      <tr><td style="font-weight:600;">Total Revenue</td><td class="hl">$13.7M</td><td>$16.8M</td><td>$48.6M</td><td>$82.4M</td><td class="hl">$105.2M</td></tr>
+      <tr><td style="opacity:0.5;">&nbsp;&nbsp;LATAM</td><td>$13.7M</td><td>$15.1M</td><td>$21.2M</td><td>$29.3M</td><td>$40.1M</td></tr>
+      <tr><td style="opacity:0.5;">&nbsp;&nbsp;U.S. Expansion</td><td>&mdash;</td><td>$1.7M</td><td>$27.4M</td><td>$53.1M</td><td class="hl">$65.1M</td></tr>
+      <tr><td style="font-weight:600;">Gross Margin</td><td>56%</td><td>45%</td><td>44%</td><td>44%</td><td>45%</td></tr>
+      <tr><td style="font-weight:600;">Adj. EBITDA</td><td class="pos">$3.2M</td><td class="neg">($2.0M)</td><td class="neg">($9.9M)</td><td class="pos">$6.8M</td><td class="pos">$19.1M</td></tr>
+      <tr><td style="font-weight:600;">EBITDA Margin</td><td class="pos">24%</td><td class="neg">(12%)</td><td class="neg">(20%)</td><td class="pos">8%</td><td class="pos">18%</td></tr>
+      <tr style="border-top:1px solid rgba(255,255,255,0.1);"><td style="font-weight:600;">Cash Position</td><td>$3.7M</td><td>$21.2M</td><td>$8.8M</td><td>$11.0M</td><td class="hl">$21.6M</td></tr>
+    </tbody>
+  </table>
+
+  <div class="stress-box reveal reveal-delay-3">
+    <div class="s-title">Stress Test: What If U.S. Ramp Takes 12 Months Longer?</div>
+    <div class="s-body">LATAM alone generates $40M revenue and ~$8M EBITDA by 2029. Cash never drops below $6M. The U.S. spend can be throttled without killing the company. We invest from strength, not desperation.</div>
+  </div>
+</section>
+
+<!-- S13: THE ASK -->
+<section data-label="The Ask" style="padding-bottom: 15vh;">
+  <div class="glow-orb" style="width:700px;height:700px;background:radial-gradient(circle,rgba(242,101,34,0.12),transparent 70%);top:-20%;left:20%;"></div>
+  <div class="glow-orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(124,58,237,0.1),transparent 70%);bottom:10%;right:-5%;"></div>
+  <div class="section-num reveal">13 &mdash; The Ask</div>
+  <div class="mega reveal reveal-delay-1" style="font-size: clamp(56px, 10vw, 120px);">$30M</div>
+  <div class="title reveal reveal-delay-2" style="margin-top: 8px;">equity to capture the $115B corridor before anyone else connects both sides.</div>
+
+  <div class="ask-grid reveal reveal-delay-3">
+    <div class="ask-block">
+      <div class="ask-pct">63%</div>
+      <div class="ask-label">U.S. Expansion</div>
+      <div class="ask-desc">Customer acquisition, community GTM, state-by-state rollout (NY, NJ, TX, FL)</div>
+    </div>
+    <div class="ask-block">
+      <div class="ask-pct">15%</div>
+      <div class="ask-label">Balance Sheet</div>
+      <div class="ask-desc">Cash reserves for 18+ months runway through the J-curve</div>
+    </div>
+    <div class="ask-block">
+      <div class="ask-pct">14%</div>
+      <div class="ask-label">Team & Ops</div>
+      <div class="ask-desc">~73 new FTEs: sales, compliance, product, customer support</div>
+    </div>
+    <div class="ask-block">
+      <div class="ask-pct">8%</div>
+      <div class="ask-label">Product & R&D</div>
+      <div class="ask-desc">U.S. payment rails, regulatory tech, platform localization</div>
+    </div>
+  </div>
+
+  <div class="closing-text reveal reveal-delay-4">
+    Payphone is already the financial backbone for 143,000 active users across Latin America. The $115B U.S.-LATAM corridor is contested by one-trick pipes. <strong>We are the only platform that lives on both sides.</strong> The question isn't whether this market gets disrupted &mdash; it's whether you're in the room when it happens.
+  </div>
+</section>
+
+<!-- END -->
+<section data-label="Close" style="min-height: 50vh; text-align: center; align-items: center;">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,var(--orange-glow),transparent 70%);top:0;left:30%;"></div>
+  <div class="mega reveal" style="font-size: clamp(40px, 6vw, 64px);">payphone</div>
+  <div class="reveal reveal-delay-1" style="font-size: 16px; opacity: 0.4; margin-top: 12px;">Existe un mundo mas simple.</div>
+  <div class="reveal reveal-delay-2" style="font-size: 13px; opacity: 0.2; margin-top: 32px;">
+    Confidential &bull; Project Ring &bull; Winter 2026<br>
+    Origin Merchant Partners
+  </div>
+</section>
+
+</div><!-- /main-content -->
+
+<script>
+// ===== PASSWORD =====
+const PASS_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // sha256 of "password"
+// We'll use a simpler approach: the password is "projectring2026"
+const VALID_PASS = 'projectring2026';
+
+const gate = document.getElementById('password-gate');
+const passInput = document.getElementById('passwordInput');
+const passBtn = document.getElementById('passwordBtn');
+const gateError = document.getElementById('gateError');
+const mainContent = document.getElementById('main-content');
+const mainNav = document.getElementById('mainNav');
+
+function unlock() {
+  if (passInput.value === VALID_PASS) {
+    gate.classList.add('hidden');
+    mainContent.style.display = 'block';
+    mainNav.style.display = 'flex';
+    requestAnimationFrame(() => {
+      mainContent.classList.add('visible');
+      initAll();
+    });
+    setTimeout(() => { gate.style.display = 'none'; }, 900);
+  } else {
+    gateError.classList.add('show');
+    passInput.style.borderColor = 'var(--red)';
+    passInput.style.boxShadow = '0 0 20px rgba(239,68,68,0.2)';
+    setTimeout(() => {
+      gateError.classList.remove('show');
+      passInput.style.borderColor = '';
+      passInput.style.boxShadow = '';
+    }, 2000);
+  }
+}
+
+passBtn.addEventListener('click', unlock);
+passInput.addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+passInput.focus();
+
+// ===== INIT AFTER UNLOCK =====
+function initAll() {
+  initCanvas();
+  initNav();
+  initReveal();
+  initCounters();
+  initScrollProgress();
+}
+
+// ===== PARTICLE CANVAS =====
+function initCanvas() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h, particles = [];
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Particle {
+    constructor() {
+      this.reset();
+    }
+    reset() {
+      this.x = Math.random() * w;
+      this.y = Math.random() * h;
+      this.size = Math.random() * 2 + 0.5;
+      this.speedX = (Math.random() - 0.5) * 0.3;
+      this.speedY = (Math.random() - 0.5) * 0.3;
+      this.opacity = Math.random() * 0.3 + 0.05;
+      this.hue = Math.random() > 0.5 ? 20 : 270; // orange or purple
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x < 0 || this.x > w || this.y < 0 || this.y > h) this.reset();
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${this.hue}, 80%, 60%, ${this.opacity})`;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(p => { p.update(); p.draw(); });
+
+    // Draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(242,101,34,${0.04 * (1 - dist / 120)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+// ===== NAV DOTS =====
+function initNav() {
+  const sections = document.querySelectorAll('section');
+  const dotsContainer = document.getElementById('navDots');
+  const navLabel = document.getElementById('navLabel');
+
+  sections.forEach((s, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot';
+    dot.addEventListener('click', () => s.scrollIntoView({ behavior: 'smooth' }));
+    dotsContainer.appendChild(dot);
+  });
+
+  const dots = dotsContainer.querySelectorAll('.nav-dot');
+
+  function updateNav() {
+    let current = 0;
+    sections.forEach((s, i) => {
+      const rect = s.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.5) current = i;
+    });
+    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+    const num = String(current + 1).padStart(2, '0');
+    const total = String(sections.length).padStart(2, '0');
+    navLabel.textContent = `${num} / ${total}`;
+  }
+
+  window.addEventListener('scroll', updateNav, { passive: true });
+  updateNav();
+}
+
+// ===== SCROLL REVEAL =====
+function initReveal() {
+  const els = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15 });
+
+  els.forEach(el => observer.observe(el));
+}
+
+// ===== COUNTER ANIMATION =====
+function initCounters() {
+  const counters = document.querySelectorAll('.counter');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !entry.target.dataset.animated) {
+        entry.target.dataset.animated = 'true';
+        animateCounter(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  counters.forEach(c => observer.observe(c));
+
+  function animateCounter(el) {
+    const target = parseFloat(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    const decimals = parseInt(el.dataset.decimals) || 0;
+    const duration = 1500;
+    const start = performance.now();
+
+    function update(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = (target * eased).toFixed(decimals);
+      el.textContent = current + suffix;
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+}
+
+// ===== SCROLL PROGRESS =====
+function initScrollProgress() {
+  const bar = document.getElementById('scrollProgress');
+  window.addEventListener('scroll', () => {
+    const scrollTop = document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = (scrollTop / scrollHeight) * 100;
+    bar.style.width = progress + '%';
+  }, { passive: true });
+}
+</script>
+
+</body>
+</html>

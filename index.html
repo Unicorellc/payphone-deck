@@ -8,15 +8,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 :root {
-  --orange: #F26522;
-  --orange-glow: rgba(242,101,34,0.4);
-  --purple: #7c3aed;
-  --purple-deep: #4c1d95;
-  --blue: #3b82f6;
-  --cyan: #06b6d4;
-  --pink: #ec4899;
-  --dark: #030014;
-  --dark-2: #0a0520;
+  --orange: #FF6400;
+  --orange-glow: rgba(255,100,0,0.4);
+  --purple: #5A00B4;
+  --amber: #FFA000;
+  --dark: #111111;
+  --dark-2: #161616;
   --glass: rgba(255,255,255,0.04);
   --glass-border: rgba(255,255,255,0.08);
   --green: #22c55e;
@@ -33,6 +30,78 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ===== WHALE TAIL SVG SYMBOL (hidden, reused everywhere) ===== */
+.whale-svg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* ===== CUSTOM CURSOR (desktop only) ===== */
+.whale-cursor {
+  position: fixed;
+  width: 36px;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.15s;
+  display: none;
+  filter: drop-shadow(0 0 6px rgba(255,100,0,0.4));
+}
+.whale-cursor img {
+  width: 100%;
+  height: auto;
+}
+body.desktop-mode .whale-cursor { display: block; }
+body.desktop-mode, body.desktop-mode * { cursor: none !important; }
+
+/* ===== WHALE TRAIL PARTICLES ===== */
+.whale-particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99998;
+  opacity: 1;
+  transition: none;
+  will-change: transform, opacity;
+}
+
+/* ===== SWIMMING WHALES BACKGROUND ===== */
+.swimming-whales-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.swimming-whale {
+  position: absolute;
+  will-change: transform;
+}
+
+/* ===== SCROLL PROGRESS BAR ===== */
+.scroll-progress-track {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  z-index: 201;
+  background: rgba(255,255,255,0.04);
+}
+.scroll-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--orange), var(--amber), var(--purple));
+  width: 0%;
+  position: relative;
+  transition: width 0.08s linear;
+}
+.scroll-progress-knob {
+  position: absolute;
+  right: -10px;
+  top: -8px;
+  width: 20px;
+  height: auto;
+}
+
 /* ===== PASSWORD GATE ===== */
 #password-gate {
   position: fixed;
@@ -43,26 +112,51 @@ body {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  transition: opacity 1s ease, transform 1s ease;
+}
+#password-gate.breaching {
+  /* whale breach animation triggered by JS */
 }
 #password-gate.hidden {
   opacity: 0;
-  transform: scale(1.05);
+  transform: scale(1.1);
   pointer-events: none;
 }
-#password-gate .gate-orb {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, var(--orange), var(--purple-deep), transparent);
-  filter: blur(40px);
-  position: absolute;
-  animation: orbFloat 8s ease-in-out infinite;
-  opacity: 0.5;
+.gate-whale-svg {
+  width: 140px;
+  height: auto;
+  margin-bottom: 32px;
+  animation: gatePulse 3s ease-in-out infinite;
 }
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(30px, -30px) scale(1.2); }
+@keyframes gatePulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(255,100,0,0.3)); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 40px rgba(255,100,0,0.6)); }
+}
+.gate-whale-svg.breach {
+  animation: whaleBreach 1.2s ease-out forwards;
+}
+@keyframes whaleBreach {
+  0% { transform: translateY(0) rotate(0deg) scale(1); }
+  40% { transform: translateY(-200px) rotate(-15deg) scale(1.3); }
+  60% { transform: translateY(-250px) rotate(-10deg) scale(1.2); }
+  100% { transform: translateY(-800px) rotate(-5deg) scale(0.5); opacity: 0; }
+}
+.splash-particles {
+  position: absolute;
+  pointer-events: none;
+  z-index: 10001;
+}
+.splash-drop {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--orange);
+  animation: splashFall 1s ease-out forwards;
+}
+@keyframes splashFall {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
 }
 .gate-content {
   position: relative;
@@ -101,7 +195,7 @@ body {
 }
 .gate-input-wrap input:focus {
   border-color: var(--orange);
-  box-shadow: 0 0 30px rgba(242,101,34,0.15);
+  box-shadow: 0 0 30px rgba(255,100,0,0.15);
 }
 .gate-input-wrap input::placeholder { color: rgba(255,255,255,0.25); }
 .gate-btn {
@@ -142,21 +236,10 @@ body {
   opacity: 1;
 }
 
-/* ===== CANVAS BG ===== */
-#bg-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
-
 /* ===== NAV ===== */
 .nav {
   position: fixed;
-  top: 0;
+  top: 4px;
   left: 0;
   right: 0;
   z-index: 100;
@@ -165,7 +248,7 @@ body {
   justify-content: space-between;
   align-items: center;
   backdrop-filter: blur(20px);
-  background: rgba(3,0,20,0.6);
+  background: rgba(17,17,17,0.7);
   border-bottom: 1px solid rgba(255,255,255,0.04);
   transition: transform 0.4s;
 }
@@ -174,7 +257,11 @@ body {
   font-size: 20px;
   font-weight: 700;
   color: var(--orange);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+.nav-logo img { width: 22px; height: auto; }
 .nav-dots {
   display: flex;
   gap: 8px;
@@ -210,10 +297,34 @@ section {
   padding: 120px 80px 80px;
   overflow: hidden;
 }
-
 @media (max-width: 900px) {
   section { padding: 100px 24px 60px; }
   .nav { padding: 16px 24px; }
+}
+
+/* ===== SECTION WHALE DIVIDERS ===== */
+.section-divider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 0;
+  position: relative;
+  z-index: 1;
+}
+.section-divider img {
+  width: 32px;
+  height: auto;
+  opacity: 0.15;
+  transition: all 0.6s ease;
+}
+.section-divider.in-view img {
+  opacity: 0.5;
+  animation: dividerWave 2s ease-in-out infinite;
+}
+@keyframes dividerWave {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(8deg) scale(1.05); }
+  75% { transform: rotate(-8deg) scale(1.05); }
 }
 
 /* ===== REVEAL ANIMATIONS ===== */
@@ -230,6 +341,7 @@ section {
 .reveal-delay-2 { transition-delay: 0.3s; }
 .reveal-delay-3 { transition-delay: 0.45s; }
 .reveal-delay-4 { transition-delay: 0.6s; }
+.reveal-delay-5 { transition-delay: 0.75s; }
 
 /* ===== GLOW ORBS ===== */
 .glow-orb {
@@ -251,19 +363,17 @@ section {
   margin-bottom: 16px;
   opacity: 0.7;
 }
-
 .mega {
   font-family: 'Space Grotesk', sans-serif;
   font-size: clamp(64px, 12vw, 160px);
   font-weight: 700;
   line-height: 0.9;
   letter-spacing: -4px;
-  background: linear-gradient(135deg, var(--orange), var(--pink), var(--purple));
+  background: linear-gradient(135deg, var(--orange), var(--amber), var(--purple));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-
 .title {
   font-family: 'Space Grotesk', sans-serif;
   font-size: clamp(28px, 4.5vw, 56px);
@@ -272,7 +382,6 @@ section {
   letter-spacing: -1.5px;
   max-width: 900px;
 }
-
 .subtitle {
   font-size: clamp(16px, 1.8vw, 20px);
   font-weight: 400;
@@ -282,19 +391,35 @@ section {
   margin-top: 16px;
 }
 
-/* ===== GLASS CARDS ===== */
+/* ===== GLASS CARDS (with 3D tilt) ===== */
 .glass {
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 16px;
   backdrop-filter: blur(12px);
   padding: 32px;
-  transition: transform 0.4s, border-color 0.4s, box-shadow 0.4s;
+  transition: border-color 0.4s, box-shadow 0.4s;
+  transform-style: preserve-3d;
+  perspective: 800px;
+  position: relative;
+  overflow: hidden;
 }
 .glass:hover {
-  transform: translateY(-4px);
-  border-color: rgba(242,101,34,0.2);
-  box-shadow: 0 20px 60px rgba(242,101,34,0.08);
+  border-color: rgba(255,100,0,0.2);
+  box-shadow: 0 20px 60px rgba(255,100,0,0.08);
+}
+.glass .whale-watermark {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 40px;
+  height: auto;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.glass:hover .whale-watermark {
+  opacity: 0.06;
 }
 
 .card-grid {
@@ -307,19 +432,17 @@ section {
 @media (max-width: 900px) {
   .card-grid { grid-template-columns: 1fr; }
 }
-
 .card-num {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 40px;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--orange), var(--pink));
+  background: linear-gradient(135deg, var(--orange), var(--amber));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   line-height: 1;
   margin-bottom: 8px;
 }
-
 .card-label {
   font-size: 14px;
   color: rgba(255,255,255,0.45);
@@ -341,8 +464,8 @@ section {
 
 /* ===== SOLUTION SLIDE ===== */
 .solution-wrap {
-  background: linear-gradient(135deg, rgba(242,101,34,0.12), rgba(124,58,237,0.08));
-  border: 1px solid rgba(242,101,34,0.15);
+  background: linear-gradient(135deg, rgba(255,100,0,0.12), rgba(90,0,180,0.08));
+  border: 1px solid rgba(255,100,0,0.15);
   border-radius: 24px;
   padding: 48px;
   margin-top: 40px;
@@ -361,7 +484,6 @@ section {
   opacity: 0.3;
   pointer-events: none;
 }
-
 .pill-row {
   display: flex;
   flex-wrap: wrap;
@@ -387,8 +509,8 @@ section {
 
 /* ===== MOAT SLIDE ===== */
 .moat-card {
-  background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(6,182,212,0.05));
-  border: 1px solid rgba(124,58,237,0.15);
+  background: linear-gradient(135deg, rgba(90,0,180,0.1), rgba(255,160,0,0.05));
+  border: 1px solid rgba(90,0,180,0.15);
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 20px;
@@ -397,7 +519,7 @@ section {
 }
 .moat-card:hover {
   transform: translateX(8px);
-  box-shadow: -4px 0 30px rgba(124,58,237,0.15);
+  box-shadow: -4px 0 30px rgba(90,0,180,0.15);
 }
 .moat-num {
   font-family: 'Space Grotesk', sans-serif;
@@ -465,7 +587,7 @@ section {
 }
 .quad-cell:hover { background: rgba(255,255,255,0.06); }
 .quad-cell.winner {
-  background: linear-gradient(135deg, var(--orange), var(--purple-deep));
+  background: linear-gradient(135deg, var(--orange), var(--purple));
   position: relative;
 }
 .quad-cell.winner::after {
@@ -504,10 +626,10 @@ section {
   padding: 16px;
 }
 .fw-step:hover {
-  background: rgba(242,101,34,0.1);
+  background: rgba(255,100,0,0.1);
   border-color: var(--orange);
   transform: scale(1.1);
-  box-shadow: 0 0 40px rgba(242,101,34,0.15);
+  box-shadow: 0 0 40px rgba(255,100,0,0.15);
 }
 .fw-step .fw-icon { font-size: 28px; margin-bottom: 6px; }
 .fw-step .fw-text { font-size: 12px; font-weight: 600; line-height: 1.3; }
@@ -531,8 +653,8 @@ section {
   cursor: default;
 }
 .team-card:hover {
-  border-color: rgba(242,101,34,0.3);
-  box-shadow: 0 12px 40px rgba(242,101,34,0.08);
+  border-color: rgba(255,100,0,0.3);
+  box-shadow: 0 12px 40px rgba(255,100,0,0.08);
   transform: translateY(-4px);
 }
 .team-card .t-init {
@@ -598,15 +720,15 @@ section {
 }
 .ask-block:hover {
   border-color: var(--orange);
-  background: rgba(242,101,34,0.06);
+  background: rgba(255,100,0,0.06);
   transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(242,101,34,0.1);
+  box-shadow: 0 16px 40px rgba(255,100,0,0.1);
 }
 .ask-pct {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 44px;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--orange), var(--pink));
+  background: linear-gradient(135deg, var(--orange), var(--amber));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -615,7 +737,6 @@ section {
 }
 .ask-label { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
 .ask-desc { font-size: 12px; opacity: 0.35; line-height: 1.4; }
-
 .closing-text {
   font-size: clamp(18px, 2.2vw, 24px);
   line-height: 1.6;
@@ -624,7 +745,7 @@ section {
   color: rgba(255,255,255,0.55);
 }
 .closing-text strong {
-  background: linear-gradient(135deg, var(--orange), var(--pink));
+  background: linear-gradient(135deg, var(--orange), var(--amber));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -636,7 +757,7 @@ section {
   margin-top: 28px;
   padding: 24px 28px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(34,197,94,0.06), rgba(6,182,212,0.04));
+  background: linear-gradient(135deg, rgba(34,197,94,0.06), rgba(255,160,0,0.04));
   border: 1px solid rgba(34,197,94,0.15);
   max-width: 800px;
 }
@@ -685,117 +806,300 @@ section {
 }
 @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; gap: 32px; } }
 
-/* ===== SCROLL PROGRESS ===== */
-.scroll-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--orange), var(--pink), var(--purple));
-  z-index: 200;
-  width: 0%;
-  transition: width 0.1s;
+/* ===== ANIMATED COVER LOGO ===== */
+.cover-whale {
+  width: clamp(150px, 25vw, 300px);
+  height: auto;
+  margin-bottom: 24px;
 }
+.cover-whale .whale-outline {
+  stroke-dasharray: 800;
+  stroke-dashoffset: 800;
+  fill: transparent;
+  stroke: var(--orange);
+  stroke-width: 1.5;
+  animation: drawWhale 2.5s ease forwards 0.3s;
+}
+.cover-whale .whale-fill {
+  opacity: 0;
+  animation: fillWhale 1s ease forwards 2.2s;
+}
+@keyframes drawWhale {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes fillWhale {
+  to { opacity: 1; }
+}
+
+/* ===== SCROLL COMPANION WHALE ===== */
+.scroll-companion {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 150;
+  width: 44px;
+  height: 36px;
+  cursor: pointer;
+  animation: companionBob 2.5s ease-in-out infinite;
+  transition: filter 0.3s;
+  filter: drop-shadow(0 2px 8px rgba(255,100,0,0.3));
+}
+.scroll-companion:hover {
+  filter: drop-shadow(0 4px 16px rgba(255,100,0,0.6));
+}
+.scroll-companion.fast {
+  animation-duration: 0.6s;
+}
+@keyframes companionBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* ===== WHALE CONFETTI ===== */
+.whale-confetti {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform, opacity;
+}
+
+/* ===== SCROLL HINT ===== */
+.scroll-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 48px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 1px;
+}
+.scroll-hint svg, .scroll-hint img {
+  width: 24px;
+  height: auto;
+  animation: hintBounce 2s ease-in-out infinite;
+}
+@keyframes hintBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+</style>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+/* ===== D3 CHART STYLES ===== */
+.d3-chart { position: relative; }
+.d3-chart svg { overflow: visible; }
+.d3-bar { cursor: pointer; transition: filter 0.3s; }
+.d3-bar:hover { filter: brightness(1.3) drop-shadow(0 0 12px rgba(255,100,0,0.4)); }
+.d3-tooltip {
+  position: absolute;
+  padding: 10px 16px;
+  background: rgba(17,17,17,0.95);
+  border: 1px solid rgba(255,100,0,0.3);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  transform: translateY(4px);
+  z-index: 50;
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+}
+.d3-tooltip.show { opacity: 1; transform: translateY(0); }
+.d3-tooltip strong { color: var(--orange); }
+
+/* D3 Donut */
+.d3-donut-wrap { position: relative; display: inline-block; }
+.d3-donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+.d3-donut-center .donut-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--orange);
+}
+.d3-donut-center .donut-label {
+  font-size: 11px;
+  opacity: 0.4;
+}
+.d3-arc { cursor: pointer; transition: filter 0.3s, transform 0.3s; transform-origin: center; }
+.d3-arc:hover { filter: brightness(1.2) drop-shadow(0 0 8px rgba(255,100,0,0.3)); }
+.d3-arc.active { filter: brightness(1.3); }
+
+/* D3 Revenue Projection */
+.d3-area-chart { margin-top: 24px; }
+.projection-line { fill: none; stroke-width: 2.5; stroke-linecap: round; }
+.projection-dot { cursor: pointer; transition: r 0.2s; }
+.projection-dot:hover { r: 7; }
+.d3-grid line { stroke: rgba(255,255,255,0.04); }
+.d3-axis text { fill: rgba(255,255,255,0.3); font-size: 11px; font-family: 'Inter', sans-serif; }
+.d3-axis line, .d3-axis path { stroke: rgba(255,255,255,0.06); }
+
+/* D3 Animated funnel */
+.d3-funnel-bar { cursor: pointer; transition: filter 0.3s; }
+.d3-funnel-bar:hover { filter: brightness(1.2); }
 </style>
 </head>
 <body>
 
-<!-- ===== SCROLL PROGRESS ===== -->
-<div class="scroll-progress" id="scrollProgress"></div>
+<!-- ===== HIDDEN SVG DEFS (whale tail symbol, reused everywhere) ===== -->
+<svg class="whale-svg-defs" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <symbol id="whale-tail" viewBox="0 0 100 80">
+      <path fill-rule="evenodd" d="M50,78 C47,66 42,56 34,46 C24,34 14,24 6,16 C1,10 -1,4 4,1 C10,-1 18,1 26,8 C34,16 40,26 44,36 C46,42 48,46 50,50 C52,46 54,42 56,36 C60,26 66,16 74,8 C82,1 90,-1 96,1 C101,4 99,10 94,16 C86,24 76,34 66,46 C58,56 53,66 50,78Z M22,22 C17,14 14,8 18,4 C22,1 28,4 32,12 C36,20 34,28 28,30 C22,32 18,28 22,22Z M78,22 C83,14 86,8 82,4 C78,1 72,4 68,12 C64,20 66,28 72,30 C78,32 82,28 78,22Z"/>
+    </symbol>
+    <!-- Outline-only version for the animated cover -->
+    <symbol id="whale-tail-outline" viewBox="0 0 100 80">
+      <path d="M50,78 C47,66 42,56 34,46 C24,34 14,24 6,16 C1,10 -1,4 4,1 C10,-1 18,1 26,8 C34,16 40,26 44,36 C46,42 48,46 50,50 C52,46 54,42 56,36 C60,26 66,16 74,8 C82,1 90,-1 96,1 C101,4 99,10 94,16 C86,24 76,34 66,46 C58,56 53,66 50,78Z"/>
+      <path d="M22,22 C17,14 14,8 18,4 C22,1 28,4 32,12 C36,20 34,28 28,30 C22,32 18,28 22,22Z"/>
+      <path d="M78,22 C83,14 86,8 82,4 C78,1 72,4 68,12 C64,20 66,28 72,30 C78,32 82,28 78,22Z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ===== CUSTOM WHALE CURSOR ===== -->
+<div class="whale-cursor" id="whaleCursor">
+  <img src="whale-logo.png" alt="" draggable="false" />
+</div>
+
+<!-- ===== SCROLL PROGRESS BAR ===== -->
+<div class="scroll-progress-track" id="scrollProgressTrack" style="display:none;">
+  <div class="scroll-progress-bar" id="scrollProgressBar">
+    <img class="scroll-progress-knob" src="whale-logo.png" alt="" />
+  </div>
+</div>
+
+<!-- ===== SWIMMING WHALES BACKGROUND ===== -->
+<div class="swimming-whales-container" id="swimmingWhales"></div>
 
 <!-- ===== PASSWORD GATE ===== -->
 <div id="password-gate">
-  <div class="gate-orb" style="top: 20%; left: 30%;"></div>
-  <div class="gate-orb" style="bottom: 20%; right: 25%; animation-delay: -3s; background: radial-gradient(circle, var(--purple), transparent);"></div>
+  <div class="glow-orb" style="width:200px;height:200px;background:radial-gradient(circle at 30% 30%, var(--orange), var(--purple), transparent);top:20%;left:30%;animation:gateOrbFloat 8s ease-in-out infinite;opacity:0.5;position:absolute;filter:blur(40px);"></div>
+  <div class="glow-orb" style="width:200px;height:200px;background:radial-gradient(circle, var(--purple), transparent);bottom:20%;right:25%;animation:gateOrbFloat 8s ease-in-out infinite;animation-delay:-3s;opacity:0.5;position:absolute;filter:blur(40px);"></div>
   <div class="gate-content">
+    <img class="gate-whale-svg" id="gateWhale" src="whale-logo.png" alt="Payphone" draggable="false" />
     <div class="gate-logo">payphone</div>
     <div class="gate-subtitle">Project Ring &bull; Confidential</div>
     <div class="gate-input-wrap">
       <input type="password" id="passwordInput" placeholder="Enter access code" autocomplete="off" />
       <button class="gate-btn" id="passwordBtn" aria-label="Submit">
-        <svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>
     <div class="gate-error" id="gateError">Invalid access code. Try again.</div>
+    <div class="splash-particles" id="splashParticles"></div>
   </div>
 </div>
 
-<!-- ===== BACKGROUND CANVAS ===== -->
-<canvas id="bg-canvas"></canvas>
-
 <!-- ===== NAV ===== -->
 <nav class="nav" id="mainNav" style="display:none;">
-  <div class="nav-logo">payphone</div>
+  <div class="nav-logo">
+    <img src="whale-logo.png" alt="" />
+    payphone
+  </div>
   <div class="nav-dots" id="navDots"></div>
-  <div class="nav-label" id="navLabel">01 / 13</div>
+  <div class="nav-label" id="navLabel">01 / 15</div>
 </nav>
+
+<!-- ===== SCROLL COMPANION WHALE ===== -->
+<img class="scroll-companion" id="scrollCompanion" src="whale-logo.png" alt="" style="display:none;" />
 
 <!-- ===== MAIN CONTENT ===== -->
 <div id="main-content">
 
 <!-- S0: COVER -->
-<section data-label="Cover" style="justify-content: flex-end; padding-bottom: 15vh;">
+<section id="s0" data-label="Cover" style="justify-content: flex-end; padding-bottom: 12vh;">
   <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,var(--orange-glow),transparent 70%);top:-10%;right:-10%;"></div>
-  <div class="glow-orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(124,58,237,0.2),transparent 70%);bottom:10%;left:-5%;"></div>
+  <div class="glow-orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(90,0,180,0.2),transparent 70%);bottom:10%;left:-5%;"></div>
   <div class="reveal" style="margin-bottom: 12px;">
     <span style="display:inline-block;padding:6px 16px;border:1px solid rgba(255,255,255,0.1);border-radius:20px;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.35);text-transform:uppercase;">Confidential &bull; Winter 2026</span>
   </div>
-  <div class="mega reveal reveal-delay-1">payphone</div>
-  <div class="subtitle reveal reveal-delay-2" style="font-size: clamp(18px, 2.2vw, 24px); margin-top: 20px;">
+  <!-- Animated whale tail logo -->
+  <img class="cover-whale reveal reveal-delay-1" src="whale-logo.png" alt="Payphone" />
+  <div class="mega reveal reveal-delay-2">payphone</div>
+  <div class="subtitle reveal reveal-delay-3" style="font-size: clamp(18px, 2.2vw, 24px); margin-top: 20px;">
     Collect here. Send home. One tap.<br><span style="font-size:0.75em;opacity:0.6;">The first unified collect-and-remit platform for 27M LATAM migrants in the U.S.</span>
   </div>
-  <div class="reveal reveal-delay-3" style="margin-top: 40px; display: flex; gap: 40px; font-size: 13px; color: rgba(255,255,255,0.25);">
+  <div class="reveal reveal-delay-4" style="margin-top: 40px; display: flex; gap: 40px; font-size: 13px; color: rgba(255,255,255,0.25);">
     <span>$30M Equity Raise</span>
     <span>Project Ring</span>
     <span>Origin Merchant Partners</span>
   </div>
+  <div class="scroll-hint reveal reveal-delay-5">
+    <span>Scroll to dive in</span>
+    <img src="whale-logo.png" alt="" style="width:28px;height:auto;opacity:0.5;" />
+  </div>
 </section>
 
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
 <!-- S1: DECLARATION -->
-<section data-label="Declaration">
-  <div class="glow-orb" style="width:600px;height:600px;background:radial-gradient(circle,rgba(242,101,34,0.15),transparent 70%);top:0;right:0;"></div>
+<section id="s1" data-label="Declaration">
+  <div class="glow-orb" style="width:600px;height:600px;background:radial-gradient(circle,rgba(255,100,0,0.15),transparent 70%);top:0;right:0;"></div>
   <div class="section-num reveal">01 &mdash; Declaration</div>
   <div class="mega reveal reveal-delay-1">$361M</div>
-  <div class="title reveal reveal-delay-2" style="margin-top: 12px;">processed last year &mdash; growing 52% annually &mdash; and we haven't even entered the $515B U.S. market yet.</div>
+  <div class="title reveal reveal-delay-2" style="margin-top: 12px;">processed last year &mdash; growing 52% annually &mdash; and we haven't even entered the $570B U.S. market yet.</div>
   <div class="card-grid reveal reveal-delay-3">
     <div class="glass">
       <div class="card-num"><span class="counter" data-target="143" data-suffix="K">0</span></div>
       <div class="card-label">Active users across 15 countries making 465+ payments per minute</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" />
     </div>
     <div class="glass">
       <div class="card-num"><span class="counter" data-target="6.1" data-suffix="x" data-decimals="1">0</span></div>
       <div class="card-label">LTV/CAC ratio with unit economics improving every quarter</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" />
     </div>
     <div class="glass">
       <div class="card-num"><span class="counter" data-target="24" data-suffix="%">0</span></div>
       <div class="card-label">Adj. EBITDA margin &mdash; profitable before the growth investment</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" />
     </div>
   </div>
 </section>
 
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
 <!-- S2: MARKET TRUTH -->
-<section data-label="Market Truth">
-  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(6,182,212,0.12),transparent 70%);bottom:0;left:0;"></div>
+<section id="s2" data-label="Market Truth">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(255,160,0,0.12),transparent 70%);bottom:0;left:0;"></div>
   <div class="section-num reveal">02 &mdash; Market Truth</div>
-  <div class="title reveal reveal-delay-1">27 million LATAM migrants in the U.S. move $115B home every year &mdash; and spend another $400B+ locally. Nobody owns both wallets.</div>
+  <div class="title reveal reveal-delay-1">27 million LATAM migrants in the U.S. move $120B home every year &mdash; and spend another $450B+ locally. Nobody owns both wallets.</div>
   <div class="card-grid reveal reveal-delay-2">
     <div class="glass">
-      <div class="card-num">$515B+</div>
-      <div class="card-label">Total addressable spend: $115B remittances + $400B domestic consumer spend by LATAM migrants in the U.S.</div>
+      <div class="card-num">$570B+</div>
+      <div class="card-label">Total addressable spend: $120B remittances + $450B domestic consumer spend by LATAM migrants in the U.S.</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" />
     </div>
     <div class="glass">
       <div class="card-num"><span class="counter" data-target="89" data-suffix="%">0</span></div>
       <div class="card-label">of digital remittances are now initiated via mobile &mdash; the shift to app-first is irreversible</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" />
     </div>
     <div class="glass">
       <div class="card-num"><span class="counter" data-target="47" data-suffix="M">0</span></div>
       <div class="card-label">Total LATAM-born population in the U.S. including 2nd generation &mdash; growing 3% annually</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" />
     </div>
   </div>
 </section>
 
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
 <!-- S3: PROBLEM -->
-<section data-label="The Problem">
+<section id="s3" data-label="The Problem">
   <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(239,68,68,0.1),transparent 70%);top:10%;right:10%;"></div>
   <div class="section-num reveal">03 &mdash; The Problem</div>
   <div class="title reveal reveal-delay-1">Miguel mows lawns in Houston. He gets paid in cash &mdash; because no one can collect from him digitally. Then he loses $15 every time he sends money home.</div>
@@ -804,20 +1108,26 @@ section {
     <div class="glass" style="border-color: rgba(239,68,68,0.15);">
       <div class="crime-num">7 steps</div>
       <div class="card-label">What it takes Miguel to get paid, cash a check, and send money home today</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" style="filter:hue-rotate(-15deg) saturate(2) brightness(0.8);" />
     </div>
     <div class="glass" style="border-color: rgba(239,68,68,0.15);">
       <div class="crime-num">$780/yr</div>
       <div class="card-label">Lost to fees per migrant &mdash; across check cashing, remittance, and ATM charges</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" style="filter:hue-rotate(-15deg) saturate(2) brightness(0.8);" />
     </div>
     <div class="glass" style="border-color: rgba(239,68,68,0.15);">
       <div class="crime-num">0</div>
       <div class="card-label">Platforms that collect payments and send remittances in one tap</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" style="filter:hue-rotate(-15deg) saturate(2) brightness(0.8);" />
     </div>
   </div>
 </section>
 
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
 <!-- S4: SOLUTION -->
-<section data-label="The Solution">
+<section id="s4" data-label="The Solution">
   <div class="glow-orb" style="width:600px;height:600px;background:radial-gradient(circle,var(--orange-glow),transparent 70%);top:-20%;left:-10%;opacity:0.2;"></div>
   <div class="section-num reveal">04 &mdash; What We Do</div>
   <div class="title reveal reveal-delay-1" style="background: linear-gradient(135deg, #fff, rgba(255,255,255,0.8)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Collect here. Send home. One tap. &mdash; Not a remittance app with payments bolted on.</div>
@@ -844,21 +1154,27 @@ section {
     <div class="glass">
       <div class="card-num">9</div>
       <div class="card-label">Ways to make and receive payments</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" />
     </div>
     <div class="glass">
       <div class="card-num">0%</div>
       <div class="card-label">Cost for P2P transfers within the ecosystem</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" />
     </div>
     <div class="glass">
       <div class="card-num">&lt;48h</div>
       <div class="card-label">Full onboarding &mdash; no branch visit required</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" />
     </div>
   </div>
 </section>
 
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
 <!-- S5: UNFAIR ADVANTAGE -->
-<section data-label="Why We Win">
-  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(124,58,237,0.12),transparent 70%);top:0;right:0;"></div>
+<section id="s5" data-label="Why We Win">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(90,0,180,0.12),transparent 70%);top:0;right:0;"></div>
   <div class="section-num reveal">05 &mdash; Why We Win</div>
   <div class="title reveal reveal-delay-1">We own both sides of the remittance corridor. No competitor can say that.</div>
   <div style="margin-top: 40px;">
@@ -877,7 +1193,7 @@ section {
       <div class="moat-title">12-Year Regulatory Head Start</div>
       <div class="moat-desc">10+ certifications across 15 countries. 8 independent AML audits &mdash; zero critical findings. PCI-DSS compliant. A new entrant needs 3-5 years and $10M+ just to replicate our compliance infrastructure.</div>
     </div>
-    <div class="moat-card reveal reveal-delay-4" style="border-color: rgba(242,101,34,0.2); background: linear-gradient(135deg, rgba(242,101,34,0.08), rgba(239,68,68,0.04));">
+    <div class="moat-card reveal reveal-delay-4" style="border-color: rgba(255,100,0,0.2); background: linear-gradient(135deg, rgba(255,100,0,0.08), rgba(239,68,68,0.04));">
       <div class="moat-num" style="color: var(--orange);">RISK &mdash; ADDRESSED</div>
       <div class="moat-title">Can You Acquire U.S. Users at Viable Economics?</div>
       <div class="moat-desc">We don't acquire from zero. Our 1M+ LATAM users have family in the U.S. The U.S. user is the other end of an existing transaction. Our LATAM base is our U.S. distribution channel. Community-led acquisition, not paid ads. Projected U.S. CAC: ~$75/user &mdash; budgeted and stress-tested.</div>
@@ -885,36 +1201,19 @@ section {
   </div>
 </section>
 
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
 <!-- S6: TRACTION -->
-<section data-label="Traction">
+<section id="s6" data-label="Traction">
   <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(34,197,94,0.1),transparent 70%);bottom:0;right:0;"></div>
   <div class="section-num reveal">06 &mdash; Traction</div>
   <div class="title reveal reveal-delay-1">Revenue has compounded at 52% for three years &mdash; and the engine is accelerating.</div>
   <div class="two-col reveal reveal-delay-2">
     <div>
       <div style="font-size: 12px; opacity: 0.3; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Revenue (US$ millions)</div>
-      <div style="display:flex; align-items:flex-end; gap:20px; height:180px;">
-        <div style="flex:1;text-align:center;">
-          <div style="font-size:14px;font-weight:700;color:var(--orange);margin-bottom:4px;">$3.9</div>
-          <div style="height:34px;background:rgba(242,101,34,0.25);border-radius:6px 6px 0 0;"></div>
-          <div style="font-size:11px;opacity:0.3;margin-top:4px;">2022</div>
-        </div>
-        <div style="flex:1;text-align:center;">
-          <div style="font-size:14px;font-weight:700;color:var(--orange);margin-bottom:4px;">$6.9</div>
-          <div style="height:60px;background:rgba(242,101,34,0.35);border-radius:6px 6px 0 0;"></div>
-          <div style="font-size:11px;opacity:0.3;margin-top:4px;">2023</div>
-        </div>
-        <div style="flex:1;text-align:center;">
-          <div style="font-size:14px;font-weight:700;color:var(--orange);margin-bottom:4px;">$9.7</div>
-          <div style="height:86px;background:rgba(242,101,34,0.5);border-radius:6px 6px 0 0;"></div>
-          <div style="font-size:11px;opacity:0.3;margin-top:4px;">2024</div>
-        </div>
-        <div style="flex:1;text-align:center;">
-          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">$13.7</div>
-          <div style="height:120px;background:linear-gradient(to top, var(--orange), var(--pink));border-radius:6px 6px 0 0;box-shadow:0 0 30px var(--orange-glow);"></div>
-          <div style="font-size:11px;opacity:0.3;margin-top:4px;">2025</div>
-        </div>
-      </div>
+      <div class="d3-chart" id="d3RevenueBar" style="height:220px;"></div>
+      <div class="d3-tooltip" id="barTooltip"></div>
     </div>
     <div>
       <div style="margin-bottom:20px;">
@@ -937,15 +1236,18 @@ section {
   </div>
 </section>
 
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
 <!-- S7: BUSINESS MODEL -->
-<section data-label="Business Model">
-  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(242,101,34,0.1),transparent 70%);top:10%;left:-10%;"></div>
+<section id="s7" data-label="Business Model">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(255,100,0,0.1),transparent 70%);top:10%;left:-10%;"></div>
   <div class="section-num reveal">07 &mdash; Business Model</div>
   <div class="title reveal reveal-delay-1">Every dollar that enters the ecosystem pays us up to three times.</div>
   <div class="subtitle reveal reveal-delay-2">User loads $100. We earn 5% on entry (wallet). We earn interest on float. We earn a fee on exit (banking). The user retains $95. No subscription. No hidden charges.</div>
 
   <div class="econ-flow reveal reveal-delay-3">
-    <div class="econ-step" style="background: rgba(242,101,34,0.08); border: 1px solid rgba(242,101,34,0.2); border-radius: 14px;">
+    <div class="econ-step" style="background: rgba(255,100,0,0.08); border: 1px solid rgba(255,100,0,0.2); border-radius: 14px;">
       <div class="e-val" style="color: var(--orange);">$38</div>
       <div class="e-label">CAC</div>
     </div>
@@ -955,13 +1257,13 @@ section {
       <div class="e-label">Lifetime Value</div>
     </div>
     <div class="econ-arrow">&rarr;</div>
-    <div class="econ-step" style="background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.2); border-radius: 14px;">
+    <div class="econ-step" style="background: rgba(90,0,180,0.08); border: 1px solid rgba(90,0,180,0.2); border-radius: 14px;">
       <div class="e-val" style="color: var(--purple);">6.1x</div>
       <div class="e-label">LTV / CAC</div>
     </div>
     <div class="econ-arrow">&rarr;</div>
-    <div class="econ-step" style="background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2); border-radius: 14px;">
-      <div class="e-val" style="color: var(--cyan);">&lt;6mo</div>
+    <div class="econ-step" style="background: rgba(255,160,0,0.08); border: 1px solid rgba(255,160,0,0.2); border-radius: 14px;">
+      <div class="e-val" style="color: var(--amber);">&lt;6mo</div>
       <div class="e-label">Payback</div>
     </div>
   </div>
@@ -969,38 +1271,41 @@ section {
   <table class="fin-table reveal reveal-delay-4">
     <thead><tr><th>Stream</th><th>2025A Rev</th><th>% Total</th><th>CAGR '25-'29</th><th>How it works</th></tr></thead>
     <tbody>
-      <tr><td style="font-weight:600;">Wallet &amp; Collections</td><td class="hl">$11.6M</td><td>85%</td><td class="hl">102%</td><td style="opacity:0.5">5% commission on every dollar loaded &mdash; scales with U.S. Tap-to-Phone</td></tr>
-      <tr><td style="font-weight:600;">Cross-Border</td><td class="hl">$1.0M</td><td>7%</td><td class="hl">118%</td><td style="opacity:0.5">FX spread + float yield on corridor volume</td></tr>
-      <tr><td style="font-weight:600;">Banking &amp; Cards</td><td class="hl">$0.2M</td><td>1%</td><td class="hl">210%</td><td style="opacity:0.5">Interchange + $0.18 per txn &mdash; fastest-growing stream</td></tr>
+      <tr><td style="font-weight:600;">Wallet &amp; Collections</td><td class="hl">$11.6M</td><td>85%</td><td class="hl">131%</td><td style="opacity:0.5">5.5% commission on every dollar loaded &mdash; scales with U.S. Tap-to-Phone</td></tr>
+      <tr><td style="font-weight:600;">Cross-Border</td><td class="hl">$1.0M</td><td>7%</td><td class="hl">148%</td><td style="opacity:0.5">FX spread + float yield on corridor volume</td></tr>
+      <tr><td style="font-weight:600;">Banking &amp; Cards</td><td class="hl">$0.2M</td><td>1%</td><td class="hl">265%</td><td style="opacity:0.5">Interchange + $0.18 per txn &mdash; fastest-growing stream</td></tr>
     </tbody>
   </table>
 </section>
 
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
 <!-- S8: MARKET SIZE -->
-<section data-label="Market Size">
-  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(6,182,212,0.08),transparent 70%);bottom:0;right:0;"></div>
+<section id="s8" data-label="Market Size">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(255,160,0,0.08),transparent 70%);bottom:0;right:0;"></div>
   <div class="section-num reveal">08 &mdash; Market Size</div>
-  <div class="title reveal reveal-delay-1">$515B flows through our target users every year. We need less than 1% to build a billion-dollar business.</div>
+  <div class="title reveal reveal-delay-1">$570B flows through our target users every year. We need less than 1% to build a billion-dollar business.</div>
 
   <div class="two-col reveal reveal-delay-2">
     <div>
       <div style="font-size:13px;opacity:0.3;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">U.S. Expansion &mdash; Bottoms Up</div>
       <div class="funnel">
-        <div class="funnel-step" style="background: linear-gradient(135deg, rgba(242,101,34,0.15), rgba(242,101,34,0.05));">
+        <div class="funnel-step" style="background: linear-gradient(135deg, rgba(255,100,0,0.15), rgba(255,100,0,0.05));">
           <span class="f-label">LATAM migrants in 10 target states</span>
           <span class="f-val" style="color:var(--orange);">18.5M</span>
         </div>
-        <div class="funnel-step" style="background: linear-gradient(135deg, rgba(242,101,34,0.12), rgba(242,101,34,0.04));">
-          <span class="f-label">&times; 40% underbanked or cash-reliant</span>
-          <span class="f-val" style="color:var(--orange);">7.4M</span>
+        <div class="funnel-step" style="background: linear-gradient(135deg, rgba(255,100,0,0.12), rgba(255,100,0,0.04));">
+          <span class="f-label">&times; 45% underbanked or cash-reliant</span>
+          <span class="f-val" style="color:var(--orange);">8.3M</span>
         </div>
-        <div class="funnel-step" style="background: linear-gradient(135deg, rgba(242,101,34,0.1), rgba(242,101,34,0.03));">
-          <span class="f-label">&times; $4,200 GTV/user &times; 5% blended take</span>
-          <span class="f-val" style="color:var(--orange);">$1.55B</span>
+        <div class="funnel-step" style="background: linear-gradient(135deg, rgba(255,100,0,0.1), rgba(255,100,0,0.03));">
+          <span class="f-label">&times; $5,800 GTV/user &times; 5.5% blended take</span>
+          <span class="f-val" style="color:var(--orange);">$2.65B</span>
         </div>
-        <div class="funnel-step" style="background: linear-gradient(135deg, rgba(242,101,34,0.2), rgba(124,58,237,0.08)); border: 1px solid rgba(242,101,34,0.2);">
-          <span class="f-label">Our 2029E target: 5% penetration</span>
-          <span class="f-val" style="color:var(--orange);">~$155M</span>
+        <div class="funnel-step" style="background: linear-gradient(135deg, rgba(255,100,0,0.2), rgba(90,0,180,0.08)); border: 1px solid rgba(255,100,0,0.2);">
+          <span class="f-label">Our 2029E target: 10% penetration</span>
+          <span class="f-val" style="color:var(--orange);">~$265M</span>
         </div>
       </div>
     </div>
@@ -1008,31 +1313,38 @@ section {
       <div style="font-size:13px;opacity:0.3;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">Total Addressable Market</div>
       <div class="glass" style="margin-bottom:16px;">
         <div style="font-size:14px;opacity:0.5;">U.S.-LATAM remittance corridor</div>
-        <div class="card-num">$115B/yr</div>
+        <div class="card-num">$120B/yr</div>
+        <img class="whale-watermark" src="whale-logo.png" alt="" />
       </div>
       <div class="glass" style="margin-bottom:16px;">
         <div style="font-size:14px;opacity:0.5;">Domestic spend by LATAM migrants in U.S.</div>
-        <div class="card-num">$400B+/yr</div>
+        <div class="card-num">$450B+/yr</div>
+        <img class="whale-watermark" src="whale-logo.png" alt="" />
       </div>
       <div class="glass" style="margin-bottom:16px;">
         <div style="font-size:14px;opacity:0.5;">LATAM digital payments (2028E)</div>
-        <div class="card-num">$450B</div>
+        <div class="card-num">$550B</div>
+        <img class="whale-watermark" src="whale-logo.png" alt="" />
       </div>
-      <div class="glass" style="border-color: rgba(242,101,34,0.2); background: rgba(242,101,34,0.05);">
+      <div class="glass" style="border-color: rgba(255,100,0,0.2); background: rgba(255,100,0,0.05);">
         <div style="font-size:14px;opacity:0.5;">Total serviceable revenue opportunity</div>
-        <div style="font-family:'Space Grotesk';font-size:48px;font-weight:700;background:linear-gradient(135deg,var(--orange),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;">$8.2B</div>
+        <div style="font-family:'Space Grotesk';font-size:48px;font-weight:700;background:linear-gradient(135deg,var(--orange),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;">$12.5B</div>
+        <img class="whale-watermark" src="whale-logo.png" alt="" />
       </div>
     </div>
   </div>
 </section>
 
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
 <!-- S9: COMPETITION -->
-<section data-label="Competition">
+<section id="s9" data-label="Competition">
   <div class="section-num reveal">09 &mdash; Competition</div>
   <div class="title reveal reveal-delay-1">Everyone else stops short. They send <em>or</em> collect. We do both &mdash; in one tap.</div>
   <div class="subtitle reveal reveal-delay-2">Remittance apps don't collect. Neobanks don't remit. Payment processors don't serve the underbanked. Payphone is not a remittance app with payments bolted on &mdash; it's the primary financial account for migrants who have never had one.</div>
 
-  <div class="axis-y-label reveal reveal-delay-3" style="margin-top:32px;">Migrant-Specific &uarr;</div>
+  <div class="axis-y-label reveal reveal-delay-3" style="margin-top:32px;font-size:11px;opacity:0.2;text-transform:uppercase;letter-spacing:1.5px;">Migrant-Specific &uarr;</div>
   <div class="quad reveal reveal-delay-3">
     <div class="quad-cell winner">
       <div class="q-title" style="position:relative;z-index:1;">Collect + Remit + Spend &mdash; Unified</div>
@@ -1054,9 +1366,12 @@ section {
   <div class="reveal reveal-delay-4" style="font-size:11px;opacity:0.2;text-transform:uppercase;letter-spacing:1.5px;margin-top:10px;max-width:800px;text-align:center;">&larr; Single Product &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Full Ecosystem &rarr;</div>
 </section>
 
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
 <!-- S10: FLYWHEEL -->
-<section data-label="Distribution">
-  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(242,101,34,0.08),transparent 70%);top:20%;left:40%;"></div>
+<section id="s10" data-label="Distribution">
+  <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(255,100,0,0.08),transparent 70%);top:20%;left:40%;"></div>
   <div class="section-num reveal">10 &mdash; Distribution</div>
   <div class="title reveal reveal-delay-1">The receiver becomes the sender. The sender becomes the merchant. The network sells itself.</div>
 
@@ -1069,27 +1384,33 @@ section {
     <div class="fw-connector">&rarr;</div>
     <div class="fw-step"><div class="fw-icon">&#x1F4F1;</div><div class="fw-text">Merchant onboards to Payphone</div></div>
     <div class="fw-connector">&rarr;</div>
-    <div class="fw-step" style="border-color:var(--orange);box-shadow:0 0 30px rgba(242,101,34,0.1);"><div class="fw-icon">&#x1F504;</div><div class="fw-text" style="color:var(--orange);">Network compounds</div></div>
+    <div class="fw-step" style="border-color:var(--orange);box-shadow:0 0 30px rgba(255,100,0,0.1);"><div class="fw-icon">&#x1F504;</div><div class="fw-text" style="color:var(--orange);">Network compounds</div></div>
   </div>
 
   <div class="card-grid reveal reveal-delay-3" style="margin-top:36px;">
     <div class="glass">
       <div class="card-num">70%</div>
       <div class="card-label">of new LATAM users came through word-of-mouth in 2025</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" />
     </div>
     <div class="glass">
       <div class="card-num">4+ yrs</div>
       <div class="card-label">Average merchant tenure &mdash; deep platform stickiness</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" />
     </div>
     <div class="glass">
       <div class="card-num">Community</div>
       <div class="card-label">U.S. GTM: churches, migrant orgs, local businesses &mdash; not paid ads</div>
+      <img class="whale-watermark" src="whale-logo.png" alt="" />
     </div>
   </div>
 </section>
 
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
 <!-- S11: TEAM -->
-<section data-label="Team">
+<section id="s11" data-label="Team">
   <div class="section-num reveal">11 &mdash; Team</div>
   <div class="title reveal reveal-delay-1">120 people. 15 countries. 80+ combined years building payments in LATAM.</div>
   <div class="team-grid reveal reveal-delay-2">
@@ -1133,73 +1454,98 @@ section {
   <div class="reveal reveal-delay-3" style="margin-top:20px;font-size:13px;opacity:0.25;">+ Carlos Flores (COO) &bull; Martin Burbano (CLO) &bull; 120+ FTEs &bull; 74% retention &bull; 66% eNPS</div>
 </section>
 
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
 <!-- S12: FINANCIALS -->
-<section data-label="Financials">
+<section id="s12" data-label="Financials">
   <div class="glow-orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(34,197,94,0.08),transparent 70%);bottom:10%;right:10%;"></div>
   <div class="section-num reveal">12 &mdash; Financials</div>
-  <div class="title reveal reveal-delay-1">$200M+ revenue by 2029. EBITDA-positive by 2028. Path to $1B GTV run-rate by 2030.</div>
+  <div class="title reveal reveal-delay-1">$300M+ revenue by 2029. EBITDA-positive by 2028. Path to $2B GTV run-rate by 2030.</div>
 
   <table class="fin-table reveal reveal-delay-2">
     <thead><tr><th></th><th>2025A</th><th>2026E</th><th>2027E</th><th>2028E</th><th>2029E</th></tr></thead>
     <tbody>
-      <tr><td style="font-weight:600;">Total Revenue</td><td class="hl">$13.7M</td><td>$24.5M</td><td>$68.0M</td><td>$142.0M</td><td class="hl">$215.0M</td></tr>
-      <tr><td style="opacity:0.5;">&nbsp;&nbsp;LATAM</td><td>$13.7M</td><td>$17.5M</td><td>$28.0M</td><td>$42.0M</td><td>$60.0M</td></tr>
-      <tr><td style="opacity:0.5;">&nbsp;&nbsp;U.S. Expansion</td><td>&mdash;</td><td>$7.0M</td><td>$40.0M</td><td>$100.0M</td><td class="hl">$155.0M</td></tr>
-      <tr><td style="font-weight:600;">Gross Margin</td><td>56%</td><td>48%</td><td>47%</td><td>49%</td><td>52%</td></tr>
-      <tr><td style="font-weight:600;">Adj. EBITDA</td><td class="pos">$3.2M</td><td class="neg">($4.5M)</td><td class="neg">($8.0M)</td><td class="pos">$18.5M</td><td class="pos">$47.3M</td></tr>
-      <tr><td style="font-weight:600;">EBITDA Margin</td><td class="pos">24%</td><td class="neg">(18%)</td><td class="neg">(12%)</td><td class="pos">13%</td><td class="pos">22%</td></tr>
-      <tr style="border-top:1px solid rgba(255,255,255,0.1);"><td style="font-weight:600;">Cash Position</td><td>$3.7M</td><td>$22.0M</td><td>$12.5M</td><td>$25.0M</td><td class="hl">$58.0M</td></tr>
+      <tr><td style="font-weight:600;">Total Revenue</td><td class="hl">$13.7M</td><td>$32.0M</td><td>$95.0M</td><td>$195.0M</td><td class="hl">$320.0M</td></tr>
+      <tr><td style="opacity:0.5;">&nbsp;&nbsp;LATAM</td><td>$13.7M</td><td>$19.0M</td><td>$32.0M</td><td>$50.0M</td><td>$75.0M</td></tr>
+      <tr><td style="opacity:0.5;">&nbsp;&nbsp;U.S. Expansion</td><td>&mdash;</td><td>$13.0M</td><td>$63.0M</td><td>$145.0M</td><td class="hl">$245.0M</td></tr>
+      <tr><td style="font-weight:600;">Gross Margin</td><td>56%</td><td>49%</td><td>48%</td><td>51%</td><td>55%</td></tr>
+      <tr><td style="font-weight:600;">Adj. EBITDA</td><td class="pos">$3.2M</td><td class="neg">($6.0M)</td><td class="neg">($10.0M)</td><td class="pos">$28.0M</td><td class="pos">$80.0M</td></tr>
+      <tr><td style="font-weight:600;">EBITDA Margin</td><td class="pos">24%</td><td class="neg">(19%)</td><td class="neg">(11%)</td><td class="pos">14%</td><td class="pos">25%</td></tr>
+      <tr style="border-top:1px solid rgba(255,255,255,0.1);"><td style="font-weight:600;">Cash Position</td><td>$3.7M</td><td>$20.0M</td><td>$8.5M</td><td>$30.0M</td><td class="hl">$95.0M</td></tr>
     </tbody>
   </table>
 
-  <div class="stress-box reveal reveal-delay-3">
+  <div class="d3-chart d3-area-chart reveal reveal-delay-3" style="max-width:900px;">
+    <div style="font-size:12px;opacity:0.3;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Revenue Projection — LATAM vs U.S. (hover for details)</div>
+    <div id="d3RevenueProjection" style="height:240px;"></div>
+    <div class="d3-tooltip" id="projTooltip"></div>
+  </div>
+
+  <div class="stress-box reveal reveal-delay-4">
     <div class="s-title">Stress Test: What If U.S. Ramp Takes 12 Months Longer?</div>
-    <div class="s-body">LATAM alone generates $60M revenue and ~$15M EBITDA by 2029. Cash never drops below $10M. U.S. spend can be throttled without killing the company &mdash; and the LATAM business alone justifies the valuation. We invest from strength, not desperation.</div>
+    <div class="s-body">LATAM alone generates $75M revenue and ~$20M EBITDA by 2029. Cash never drops below $8M. U.S. spend can be throttled without killing the company &mdash; and the LATAM business alone justifies the valuation. We invest from strength, not desperation.</div>
   </div>
 </section>
 
-<!-- S13: THE ASK -->
-<section data-label="The Ask" style="padding-bottom: 15vh;">
-  <div class="glow-orb" style="width:700px;height:700px;background:radial-gradient(circle,rgba(242,101,34,0.12),transparent 70%);top:-20%;left:20%;"></div>
-  <div class="glow-orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(124,58,237,0.1),transparent 70%);bottom:10%;right:-5%;"></div>
-  <div class="section-num reveal">13 &mdash; The Ask</div>
-  <div class="mega reveal reveal-delay-1" style="font-size: clamp(56px, 10vw, 120px);">$30M</div>
-  <div class="title reveal reveal-delay-2" style="margin-top: 8px;">equity to own the $515B opportunity before anyone else connects both wallets.</div>
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
 
-  <div class="ask-grid reveal reveal-delay-3">
-    <div class="ask-block">
-      <div class="ask-pct">63%</div>
-      <div class="ask-label">U.S. Expansion</div>
-      <div class="ask-desc">Customer acquisition, community GTM, 10-state rollout (NY, NJ, TX, FL, CA, IL, GA, NC, AZ, NV)</div>
+<!-- S13: THE ASK -->
+<section id="s13" data-label="The Ask" style="padding-bottom: 15vh;">
+  <div class="glow-orb" style="width:700px;height:700px;background:radial-gradient(circle,rgba(255,100,0,0.12),transparent 70%);top:-20%;left:20%;"></div>
+  <div class="glow-orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(90,0,180,0.1),transparent 70%);bottom:10%;right:-5%;"></div>
+  <div class="section-num reveal">13 &mdash; The Ask</div>
+  <div class="mega reveal reveal-delay-1" id="askMega" style="font-size: clamp(56px, 10vw, 120px); position: relative; display: inline-block;">$30M</div>
+  <div class="title reveal reveal-delay-2" style="margin-top: 8px;">equity to own the $570B opportunity before anyone else connects both wallets.</div>
+
+  <div class="two-col reveal reveal-delay-3" style="align-items:center;">
+    <div class="d3-donut-wrap d3-chart" id="d3AskDonut" style="text-align:center;">
+      <div class="d3-donut-center" id="donutCenter">
+        <div class="donut-val">$30M</div>
+        <div class="donut-label">allocation</div>
+      </div>
+      <div class="d3-tooltip" id="donutTooltip"></div>
     </div>
-    <div class="ask-block">
-      <div class="ask-pct">15%</div>
-      <div class="ask-label">Balance Sheet</div>
-      <div class="ask-desc">Cash reserves for 18+ months runway through the J-curve</div>
-    </div>
-    <div class="ask-block">
-      <div class="ask-pct">14%</div>
-      <div class="ask-label">Team & Ops</div>
-      <div class="ask-desc">~73 new FTEs: sales, compliance, product, customer support</div>
-    </div>
-    <div class="ask-block">
-      <div class="ask-pct">8%</div>
-      <div class="ask-label">Product & R&D</div>
-      <div class="ask-desc">U.S. payment rails, regulatory tech, platform localization</div>
+    <div class="ask-grid" style="grid-template-columns: 1fr 1fr; max-width: 460px;">
+      <div class="ask-block" data-slice="0">
+        <div class="ask-pct">63%</div>
+        <div class="ask-label">U.S. Expansion</div>
+        <div class="ask-desc">Customer acquisition, community GTM, 10-state rollout (NY, NJ, TX, FL, CA, IL, GA, NC, AZ, NV)</div>
+      </div>
+      <div class="ask-block" data-slice="1">
+        <div class="ask-pct">15%</div>
+        <div class="ask-label">Balance Sheet</div>
+        <div class="ask-desc">Cash reserves for 18+ months runway through the J-curve</div>
+      </div>
+      <div class="ask-block" data-slice="2">
+        <div class="ask-pct">14%</div>
+        <div class="ask-label">Team & Ops</div>
+        <div class="ask-desc">~73 new FTEs: sales, compliance, product, customer support</div>
+      </div>
+      <div class="ask-block" data-slice="3">
+        <div class="ask-pct">8%</div>
+        <div class="ask-label">Product & R&D</div>
+        <div class="ask-desc">U.S. payment rails, regulatory tech, platform localization</div>
+      </div>
     </div>
   </div>
 
   <div class="closing-text reveal reveal-delay-4">
-    Payphone already processes $361M for 143,000 active users across Latin America &mdash; profitably. The $515B U.S.-LATAM migrant economy is split across dozens of one-trick pipes that either collect <em>or</em> send &mdash; never both. <strong>We are the only platform that collects, remits, and keeps the user on both sides.</strong> $200M+ revenue by 2029. $8.2B serviceable market. Every new user creates a digital financial identity where none existed before. This is a generational opportunity to build the financial operating system for 47 million people.
+    Payphone already processes $361M for 143,000 active users across Latin America &mdash; profitably. The $570B U.S.-LATAM migrant economy is split across dozens of one-trick pipes that either collect <em>or</em> send &mdash; never both. <strong>We are the only platform that collects, remits, and keeps the user on both sides.</strong> $300M+ revenue by 2029. $12.5B serviceable market. Every new user creates a digital financial identity where none existed before. This is a generational opportunity to build the financial operating system for 47 million people.
   </div>
 </section>
 
-<!-- END -->
-<section data-label="Close" style="min-height: 50vh; text-align: center; align-items: center;">
+<!-- DIVIDER -->
+<div class="section-divider"><img src="whale-logo.png" alt="" /></div>
+
+<!-- CLOSE -->
+<section id="s14" data-label="Close" style="min-height: 50vh; text-align: center; align-items: center;">
   <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,var(--orange-glow),transparent 70%);top:0;left:30%;"></div>
-  <div class="mega reveal" style="font-size: clamp(40px, 6vw, 64px);">payphone</div>
-  <div class="reveal reveal-delay-1" style="font-size: 16px; opacity: 0.4; margin-top: 12px;">Existe un mundo mas simple.</div>
-  <div class="reveal reveal-delay-2" style="font-size: 13px; opacity: 0.2; margin-top: 32px;">
+  <img class="reveal" src="whale-logo.png" alt="Payphone" style="width: 80px; height: auto; margin-bottom: 16px;" />
+  <div class="mega reveal reveal-delay-1" style="font-size: clamp(40px, 6vw, 64px);">payphone</div>
+  <div class="reveal reveal-delay-2" style="font-size: 16px; opacity: 0.4; margin-top: 12px;">Existe un mundo mas simple.</div>
+  <div class="reveal reveal-delay-3" style="font-size: 13px; opacity: 0.2; margin-top: 32px;">
     Confidential &bull; Project Ring &bull; Winter 2026<br>
     Origin Merchant Partners
   </div>
@@ -1208,28 +1554,64 @@ section {
 </div><!-- /main-content -->
 
 <script>
-// ===== PASSWORD =====
-const PASS_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // sha256 of "password"
-// We'll use a simpler approach: the password is "projectring2026"
-const VALID_PASS = 'projectring2026';
+/* ================================================================
+   PAYPHONE INVESTOR DECK — INTERACTIVE ENGINE
+   ================================================================ */
 
+// ===== TOUCH DETECTION =====
+const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+// ===== PASSWORD =====
+const VALID_PASS = 'projectring2026';
 const gate = document.getElementById('password-gate');
 const passInput = document.getElementById('passwordInput');
 const passBtn = document.getElementById('passwordBtn');
 const gateError = document.getElementById('gateError');
 const mainContent = document.getElementById('main-content');
 const mainNav = document.getElementById('mainNav');
+const gateWhale = document.getElementById('gateWhale');
+const splashParticles = document.getElementById('splashParticles');
+
+function createSplash() {
+  const rect = gateWhale.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  splashParticles.style.left = cx + 'px';
+  splashParticles.style.top = cy + 'px';
+  const colors = ['#FF6400', '#FFA000', '#5A00B4', '#fff'];
+  for (let i = 0; i < 20; i++) {
+    const drop = document.createElement('div');
+    drop.className = 'splash-drop';
+    const angle = (Math.PI * 2 * i) / 20 + (Math.random() - 0.5) * 0.5;
+    const dist = 60 + Math.random() * 120;
+    drop.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    drop.style.setProperty('--dy', Math.sin(angle) * dist - 40 + 'px');
+    drop.style.background = colors[Math.floor(Math.random() * colors.length)];
+    drop.style.width = (3 + Math.random() * 5) + 'px';
+    drop.style.height = drop.style.width;
+    splashParticles.appendChild(drop);
+  }
+}
 
 function unlock() {
   if (passInput.value === VALID_PASS) {
-    gate.classList.add('hidden');
-    mainContent.style.display = 'block';
-    mainNav.style.display = 'flex';
-    requestAnimationFrame(() => {
-      mainContent.classList.add('visible');
-      initAll();
-    });
-    setTimeout(() => { gate.style.display = 'none'; }, 900);
+    // Whale breach animation
+    gateWhale.classList.add('breach');
+    createSplash();
+
+    setTimeout(() => {
+      gate.classList.add('hidden');
+      mainContent.style.display = 'block';
+      mainNav.style.display = 'flex';
+      document.getElementById('scrollProgressTrack').style.display = 'block';
+      document.getElementById('scrollCompanion').style.display = 'block';
+      requestAnimationFrame(() => {
+        mainContent.classList.add('visible');
+        initAll();
+      });
+    }, 900);
+
+    setTimeout(() => { gate.style.display = 'none'; }, 2000);
   } else {
     gateError.classList.add('show');
     passInput.style.borderColor = 'var(--red)';
@@ -1248,77 +1630,299 @@ passInput.focus();
 
 // ===== INIT AFTER UNLOCK =====
 function initAll() {
-  initCanvas();
+  initSwimmingWhales();
   initNav();
   initReveal();
   initCounters();
   initScrollProgress();
+  initScrollCompanion();
+  initDividerObservers();
+  initConfetti();
+  if (!isTouch) {
+    document.body.classList.add('desktop-mode');
+    initWhaleCursor();
+    initWhaleTrail();
+    initCardTilt();
+  }
 }
 
-// ===== PARTICLE CANVAS =====
-function initCanvas() {
-  const canvas = document.getElementById('bg-canvas');
-  const ctx = canvas.getContext('2d');
-  let w, h, particles = [];
+// ===== 1. CUSTOM WHALE CURSOR (desktop only) =====
+function initWhaleCursor() {
+  const cursor = document.getElementById('whaleCursor');
+  let cx = 0, cy = 0, tx = 0, ty = 0;
 
-  function resize() {
-    w = canvas.width = window.innerWidth;
-    h = canvas.height = window.innerHeight;
+  document.addEventListener('mousemove', e => {
+    tx = e.clientX;
+    ty = e.clientY;
+  });
+
+  function updateCursor() {
+    cx += (tx - cx) * 0.15;
+    cy += (ty - cy) * 0.15;
+    cursor.style.left = cx + 'px';
+    cursor.style.top = cy + 'px';
+    requestAnimationFrame(updateCursor);
   }
-  resize();
-  window.addEventListener('resize', resize);
+  updateCursor();
+}
 
-  class Particle {
-    constructor() {
-      this.reset();
-    }
-    reset() {
-      this.x = Math.random() * w;
-      this.y = Math.random() * h;
-      this.size = Math.random() * 2 + 0.5;
-      this.speedX = (Math.random() - 0.5) * 0.3;
-      this.speedY = (Math.random() - 0.5) * 0.3;
-      this.opacity = Math.random() * 0.3 + 0.05;
-      this.hue = Math.random() > 0.5 ? 20 : 270; // orange or purple
-    }
-    update() {
-      this.x += this.speedX;
-      this.y += this.speedY;
-      if (this.x < 0 || this.x > w || this.y < 0 || this.y > h) this.reset();
-    }
-    draw() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${this.hue}, 80%, 60%, ${this.opacity})`;
-      ctx.fill();
-    }
-  }
+// ===== 2. WHALE TRAIL PARTICLES =====
+function initWhaleTrail() {
+  let lastX = 0, lastY = 0;
+  const MAX_PARTICLES = 30;
+  let particles = [];
 
-  for (let i = 0; i < 80; i++) particles.push(new Particle());
+  document.addEventListener('mousemove', e => {
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > 40) {
+      spawnParticle(e.clientX, e.clientY);
+      lastX = e.clientX;
+      lastY = e.clientY;
+    }
+  });
 
-  function animate() {
-    ctx.clearRect(0, 0, w, h);
-    particles.forEach(p => { p.update(); p.draw(); });
+  function spawnParticle(x, y) {
+    // Reuse or create
+    if (particles.length >= MAX_PARTICLES) {
+      const old = particles.shift();
+      if (old.parentNode) old.parentNode.removeChild(old);
+    }
+    const el = document.createElement('div');
+    el.className = 'whale-particle';
+    const size = 10 + Math.random() * 10;
+    const colors = ['#FF6400', '#FFA000', '#5A00B4'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const rotation = Math.random() * 360;
+    el.innerHTML = `<img src="whale-logo.png" width="${size}" style="transform:rotate(${rotation}deg)" alt="" />`;
+    el.style.left = (x - size / 2) + 'px';
+    el.style.top = (y - size / 2) + 'px';
+    el.style.opacity = '0.6';
+    document.body.appendChild(el);
+    particles.push(el);
 
-    // Draw connections
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 120) {
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(242,101,34,${0.04 * (1 - dist / 120)})`;
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
-        }
+    // Fade out
+    let opacity = 0.6;
+    const startTime = performance.now();
+    function fade(now) {
+      const elapsed = now - startTime;
+      opacity = 0.6 * (1 - elapsed / 1000);
+      if (opacity <= 0) {
+        if (el.parentNode) el.parentNode.removeChild(el);
+        const idx = particles.indexOf(el);
+        if (idx > -1) particles.splice(idx, 1);
+        return;
       }
+      el.style.opacity = opacity;
+      requestAnimationFrame(fade);
     }
+    requestAnimationFrame(fade);
+  }
+}
+
+// ===== 3. SWIMMING WHALES BACKGROUND =====
+function initSwimmingWhales() {
+  const container = document.getElementById('swimmingWhales');
+  const whaleCount = 14;
+  const whales = [];
+
+  for (let i = 0; i < whaleCount; i++) {
+    const w = {};
+    const size = 20 + Math.random() * 60;
+    w.el = document.createElement('div');
+    w.el.className = 'swimming-whale';
+    const opacity = 0.03 + Math.random() * 0.08;
+    const colors = ['#FF6400', '#FFA000', '#5A00B4'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    w.el.innerHTML = `<img src="whale-logo.png" width="${size}" alt="" />`;
+    w.el.style.opacity = opacity;
+    container.appendChild(w.el);
+
+    // Motion parameters
+    w.x = Math.random() * window.innerWidth;
+    w.y = Math.random() * window.innerHeight;
+    w.speedX = (0.2 + Math.random() * 0.5) * (Math.random() > 0.5 ? 1 : -1);
+    w.speedY = (0.1 + Math.random() * 0.3) * (Math.random() > 0.5 ? 1 : -1);
+    w.sineAmp = 15 + Math.random() * 30;
+    w.sineFreq = 0.005 + Math.random() * 0.01;
+    w.phase = Math.random() * Math.PI * 2;
+    w.size = size;
+    whales.push(w);
+  }
+
+  let time = 0;
+  function animate() {
+    time++;
+    const ww = window.innerWidth;
+    const wh = window.innerHeight;
+    whales.forEach(w => {
+      w.x += w.speedX;
+      w.y += w.speedY + Math.sin(time * w.sineFreq + w.phase) * 0.5;
+
+      // Wrap around
+      if (w.x > ww + w.size) w.x = -w.size;
+      if (w.x < -w.size) w.x = ww + w.size;
+      if (w.y > wh + w.size) w.y = -w.size;
+      if (w.y < -w.size) w.y = wh + w.size;
+
+      const sineOffset = Math.sin(time * w.sineFreq + w.phase) * w.sineAmp;
+      const rotation = w.speedX > 0 ? 0 : 180;
+      w.el.style.transform = `translate(${w.x}px, ${w.y + sineOffset}px) scaleX(${w.speedX > 0 ? 1 : -1})`;
+    });
     requestAnimationFrame(animate);
   }
   animate();
+}
+
+// ===== 4. ANIMATED COVER LOGO — handled via CSS (stroke-dasharray) =====
+
+// ===== 5. 3D TILT ON GLASS CARDS (desktop only) =====
+function initCardTilt() {
+  const cards = document.querySelectorAll('.glass');
+  cards.forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * -6;
+      const rotateY = ((x - centerX) / centerX) * 6;
+      card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+    });
+  });
+}
+
+// ===== 6. WHALE CONFETTI on $30M =====
+function initConfetti() {
+  const askMega = document.getElementById('askMega');
+  if (!askMega) return;
+  let triggered = false;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !triggered) {
+        triggered = true;
+        burstConfetti(askMega);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  observer.observe(askMega);
+}
+
+function burstConfetti(el) {
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const colors = ['#FF6400', '#FFA000', '#5A00B4', '#FF6400', '#FFA000'];
+  const count = 35;
+
+  for (let i = 0; i < count; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'whale-confetti';
+    const size = 10 + Math.random() * 18;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const rotation = Math.random() * 360;
+    confetti.innerHTML = `<img src="whale-logo.png" width="${size}" style="transform:rotate(${rotation}deg)" alt="" />`;
+    confetti.style.left = cx + 'px';
+    confetti.style.top = cy + 'px';
+    document.body.appendChild(confetti);
+
+    // Animate
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.8;
+    const velocity = 4 + Math.random() * 8;
+    const vx = Math.cos(angle) * velocity;
+    const vy = Math.sin(angle) * velocity - 3;
+    const gravity = 0.15;
+    const spin = (Math.random() - 0.5) * 10;
+    let posX = 0, posY = 0, velY = vy, rot = rotation, opacity = 1;
+    const startTime = performance.now();
+
+    function animateConfetti(now) {
+      const elapsed = now - startTime;
+      posX += vx;
+      velY += gravity;
+      posY += velY;
+      rot += spin;
+      opacity = Math.max(0, 1 - elapsed / 2000);
+
+      confetti.style.transform = `translate(${posX}px, ${posY}px)`;
+      confetti.style.opacity = opacity;
+      confetti.querySelector('img').style.transform = `rotate(${rot}deg)`;
+
+      if (opacity > 0 && elapsed < 2000) {
+        requestAnimationFrame(animateConfetti);
+      } else {
+        if (confetti.parentNode) confetti.parentNode.removeChild(confetti);
+      }
+    }
+    requestAnimationFrame(animateConfetti);
+  }
+}
+
+// ===== 7. SCROLL COMPANION WHALE =====
+function initScrollCompanion() {
+  const companion = document.getElementById('scrollCompanion');
+  let lastScroll = 0;
+  let scrollSpeed = 0;
+  let fastTimeout = null;
+
+  companion.addEventListener('click', () => {
+    const sections = document.querySelectorAll('section');
+    let nextSection = null;
+    for (const s of sections) {
+      const rect = s.getBoundingClientRect();
+      if (rect.top > 80) {
+        nextSection = s;
+        break;
+      }
+    }
+    if (nextSection) {
+      nextSection.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // At end, scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+
+  window.addEventListener('scroll', () => {
+    const currentScroll = window.scrollY;
+    scrollSpeed = Math.abs(currentScroll - lastScroll);
+    lastScroll = currentScroll;
+
+    if (scrollSpeed > 30) {
+      companion.classList.add('fast');
+      clearTimeout(fastTimeout);
+      fastTimeout = setTimeout(() => companion.classList.remove('fast'), 300);
+    }
+  }, { passive: true });
+}
+
+// ===== 8. SECTION WHALE DIVIDERS =====
+function initDividerObservers() {
+  const dividers = document.querySelectorAll('.section-divider');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      entry.target.classList.toggle('in-view', entry.isIntersecting);
+    });
+  }, { threshold: 0.5 });
+  dividers.forEach(d => observer.observe(d));
+}
+
+// ===== 9. SCROLL PROGRESS BAR (whale knob) =====
+function initScrollProgress() {
+  const bar = document.getElementById('scrollProgressBar');
+  window.addEventListener('scroll', () => {
+    const scrollTop = document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+    bar.style.width = progress + '%';
+  }, { passive: true });
 }
 
 // ===== NAV DOTS =====
@@ -1362,7 +1966,6 @@ function initReveal() {
       }
     });
   }, { threshold: 0.15 });
-
   els.forEach(el => observer.observe(el));
 }
 
@@ -1377,7 +1980,6 @@ function initCounters() {
       }
     });
   }, { threshold: 0.5 });
-
   counters.forEach(c => observer.observe(c));
 
   function animateCounter(el) {
@@ -1398,16 +2000,351 @@ function initCounters() {
   }
 }
 
-// ===== SCROLL PROGRESS =====
-function initScrollProgress() {
-  const bar = document.getElementById('scrollProgress');
-  window.addEventListener('scroll', () => {
-    const scrollTop = document.documentElement.scrollTop;
-    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const progress = (scrollTop / scrollHeight) * 100;
-    bar.style.width = progress + '%';
-  }, { passive: true });
+// ===== GATE ORB ANIMATION (CSS keyframes backup) =====
+const gateOrbStyle = document.createElement('style');
+gateOrbStyle.textContent = `
+  @keyframes gateOrbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, -30px) scale(1.2); }
+  }
+`;
+document.head.appendChild(gateOrbStyle);
+
+// ================================================================
+// D3 INTERACTIVE CHARTS
+// ================================================================
+
+// ===== D3 REVENUE BAR CHART (Traction) =====
+function initD3RevenueBar() {
+  const container = document.getElementById('d3RevenueBar');
+  if (!container || typeof d3 === 'undefined') return;
+
+  const data = [
+    { year: '2022', value: 3.9, actual: true },
+    { year: '2023', value: 6.9, actual: true },
+    { year: '2024', value: 9.7, actual: true },
+    { year: '2025', value: 13.7, actual: true }
+  ];
+
+  const margin = { top: 30, right: 10, bottom: 30, left: 10 };
+  const width = container.clientWidth - margin.left - margin.right;
+  const height = 200 - margin.top - margin.bottom;
+
+  const svg = d3.select(container)
+    .append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleBand().domain(data.map(d => d.year)).range([0, width]).padding(0.35);
+  const y = d3.scaleLinear().domain([0, 16]).range([height, 0]);
+
+  // Gradient defs
+  const defs = svg.append('defs');
+  const grad = defs.append('linearGradient').attr('id', 'barGrad').attr('x1', '0').attr('y1', '1').attr('x2', '0').attr('y2', '0');
+  grad.append('stop').attr('offset', '0%').attr('stop-color', '#FF6400');
+  grad.append('stop').attr('offset', '100%').attr('stop-color', '#FFA000');
+
+  // Bars with animation
+  svg.selectAll('.d3-bar')
+    .data(data)
+    .enter()
+    .append('rect')
+    .attr('class', 'd3-bar')
+    .attr('x', d => x(d.year))
+    .attr('width', x.bandwidth())
+    .attr('y', height)
+    .attr('height', 0)
+    .attr('rx', 6)
+    .attr('fill', (d, i) => i === data.length - 1 ? 'url(#barGrad)' : `rgba(255,100,0,${0.25 + i * 0.1})`)
+    .on('mouseenter', function(event, d) {
+      const tooltip = document.getElementById('barTooltip');
+      tooltip.innerHTML = `<strong>$${d.value}M</strong> revenue in ${d.year}`;
+      tooltip.classList.add('show');
+      const rect = this.getBoundingClientRect();
+      const parentRect = container.getBoundingClientRect();
+      tooltip.style.left = (rect.left - parentRect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+      tooltip.style.top = (rect.top - parentRect.top - 40) + 'px';
+    })
+    .on('mouseleave', function() {
+      document.getElementById('barTooltip').classList.remove('show');
+    })
+    .transition()
+    .duration(800)
+    .delay((d, i) => i * 150)
+    .ease(d3.easeCubicOut)
+    .attr('y', d => y(d.value))
+    .attr('height', d => height - y(d.value));
+
+  // Value labels
+  svg.selectAll('.bar-label')
+    .data(data)
+    .enter()
+    .append('text')
+    .attr('x', d => x(d.year) + x.bandwidth() / 2)
+    .attr('y', d => y(d.value) - 8)
+    .attr('text-anchor', 'middle')
+    .attr('fill', (d, i) => i === data.length - 1 ? '#fff' : '#FF6400')
+    .attr('font-size', '13px')
+    .attr('font-weight', '700')
+    .attr('font-family', 'Space Grotesk, sans-serif')
+    .attr('opacity', 0)
+    .text(d => `$${d.value}`)
+    .transition()
+    .duration(600)
+    .delay((d, i) => i * 150 + 400)
+    .attr('opacity', 1);
+
+  // Year labels
+  svg.selectAll('.year-label')
+    .data(data)
+    .enter()
+    .append('text')
+    .attr('x', d => x(d.year) + x.bandwidth() / 2)
+    .attr('y', height + 20)
+    .attr('text-anchor', 'middle')
+    .attr('fill', 'rgba(255,255,255,0.3)')
+    .attr('font-size', '11px')
+    .attr('font-family', 'Inter, sans-serif')
+    .text(d => d.year);
+
+  // Add glow to last bar
+  const lastBar = svg.selectAll('.d3-bar').filter((d, i) => i === data.length - 1);
+  lastBar.style('filter', 'drop-shadow(0 0 15px rgba(255,100,0,0.4))');
 }
+
+// ===== D3 REVENUE PROJECTION (Financials stacked area) =====
+function initD3RevenueProjection() {
+  const container = document.getElementById('d3RevenueProjection');
+  if (!container || typeof d3 === 'undefined') return;
+
+  const data = [
+    { year: 2025, latam: 13.7, us: 0, total: 13.7 },
+    { year: 2026, latam: 19.0, us: 13.0, total: 32.0 },
+    { year: 2027, latam: 32.0, us: 63.0, total: 95.0 },
+    { year: 2028, latam: 50.0, us: 145.0, total: 195.0 },
+    { year: 2029, latam: 75.0, us: 245.0, total: 320.0 }
+  ];
+
+  const margin = { top: 20, right: 30, bottom: 35, left: 50 };
+  const width = container.clientWidth - margin.left - margin.right;
+  const height = 220 - margin.top - margin.bottom;
+
+  const svg = d3.select(container)
+    .append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleLinear().domain([2025, 2029]).range([0, width]);
+  const y = d3.scaleLinear().domain([0, 350]).range([height, 0]);
+
+  // Grid lines
+  svg.append('g').attr('class', 'd3-grid')
+    .selectAll('line')
+    .data([0, 100, 200, 300])
+    .enter().append('line')
+    .attr('x1', 0).attr('x2', width)
+    .attr('y1', d => y(d)).attr('y2', d => y(d));
+
+  // X axis
+  svg.append('g').attr('class', 'd3-axis')
+    .attr('transform', `translate(0,${height})`)
+    .call(d3.axisBottom(x).ticks(5).tickFormat(d => d));
+
+  // Y axis
+  svg.append('g').attr('class', 'd3-axis')
+    .call(d3.axisLeft(y).ticks(4).tickFormat(d => `$${d}M`));
+
+  // Gradient fills
+  const defs = svg.append('defs');
+
+  const latamGrad = defs.append('linearGradient').attr('id', 'latamGrad').attr('x1', '0').attr('y1', '0').attr('x2', '0').attr('y2', '1');
+  latamGrad.append('stop').attr('offset', '0%').attr('stop-color', '#5A00B4').attr('stop-opacity', 0.4);
+  latamGrad.append('stop').attr('offset', '100%').attr('stop-color', '#5A00B4').attr('stop-opacity', 0.05);
+
+  const usGrad = defs.append('linearGradient').attr('id', 'usGrad').attr('x1', '0').attr('y1', '0').attr('x2', '0').attr('y2', '1');
+  usGrad.append('stop').attr('offset', '0%').attr('stop-color', '#FF6400').attr('stop-opacity', 0.4);
+  usGrad.append('stop').attr('offset', '100%').attr('stop-color', '#FF6400').attr('stop-opacity', 0.05);
+
+  // U.S. area (stacked on top of LATAM)
+  const usArea = d3.area()
+    .x(d => x(d.year))
+    .y0(d => y(d.latam))
+    .y1(d => y(d.total))
+    .curve(d3.curveMonotoneX);
+
+  // LATAM area
+  const latamArea = d3.area()
+    .x(d => x(d.year))
+    .y0(height)
+    .y1(d => y(d.latam))
+    .curve(d3.curveMonotoneX);
+
+  svg.append('path').datum(data).attr('d', latamArea).attr('fill', 'url(#latamGrad)');
+  svg.append('path').datum(data).attr('d', usArea).attr('fill', 'url(#usGrad)');
+
+  // Lines
+  const latamLine = d3.line().x(d => x(d.year)).y(d => y(d.latam)).curve(d3.curveMonotoneX);
+  const totalLine = d3.line().x(d => x(d.year)).y(d => y(d.total)).curve(d3.curveMonotoneX);
+
+  svg.append('path').datum(data).attr('d', latamLine).attr('class', 'projection-line').attr('stroke', '#5A00B4');
+  svg.append('path').datum(data).attr('d', totalLine).attr('class', 'projection-line').attr('stroke', '#FF6400');
+
+  // Interactive dots
+  const tooltip = document.getElementById('projTooltip');
+
+  data.forEach(d => {
+    // Total dot
+    svg.append('circle')
+      .attr('class', 'projection-dot')
+      .attr('cx', x(d.year)).attr('cy', y(d.total))
+      .attr('r', 5).attr('fill', '#FF6400').attr('stroke', '#111').attr('stroke-width', 2)
+      .on('mouseenter', function(event) {
+        tooltip.innerHTML = `<strong>${d.year}${d.year === 2025 ? 'A' : 'E'}</strong><br>Total: <strong>$${d.total}M</strong><br>U.S.: $${d.us}M | LATAM: $${d.latam}M`;
+        tooltip.classList.add('show');
+        const rect = this.getBoundingClientRect();
+        const parentRect = container.getBoundingClientRect();
+        tooltip.style.left = (rect.left - parentRect.left - 60) + 'px';
+        tooltip.style.top = (rect.top - parentRect.top - 70) + 'px';
+      })
+      .on('mouseleave', () => tooltip.classList.remove('show'));
+
+    // LATAM dot
+    svg.append('circle')
+      .attr('class', 'projection-dot')
+      .attr('cx', x(d.year)).attr('cy', y(d.latam))
+      .attr('r', 4).attr('fill', '#5A00B4').attr('stroke', '#111').attr('stroke-width', 2)
+      .on('mouseenter', function(event) {
+        tooltip.innerHTML = `<strong>${d.year} LATAM</strong><br>Revenue: <strong>$${d.latam}M</strong>`;
+        tooltip.classList.add('show');
+        const rect = this.getBoundingClientRect();
+        const parentRect = container.getBoundingClientRect();
+        tooltip.style.left = (rect.left - parentRect.left - 50) + 'px';
+        tooltip.style.top = (rect.top - parentRect.top - 50) + 'px';
+      })
+      .on('mouseleave', () => tooltip.classList.remove('show'));
+  });
+
+  // Legend
+  const legend = svg.append('g').attr('transform', `translate(${width - 140}, -10)`);
+  legend.append('circle').attr('cx', 0).attr('cy', 0).attr('r', 4).attr('fill', '#FF6400');
+  legend.append('text').attr('x', 10).attr('y', 4).text('Total Revenue').attr('fill', 'rgba(255,255,255,0.5)').attr('font-size', '10px');
+  legend.append('circle').attr('cx', 0).attr('cy', 16).attr('r', 4).attr('fill', '#5A00B4');
+  legend.append('text').attr('x', 10).attr('y', 20).text('LATAM Only').attr('fill', 'rgba(255,255,255,0.5)').attr('font-size', '10px');
+}
+
+// ===== D3 DONUT CHART (The Ask) =====
+function initD3AskDonut() {
+  const container = document.getElementById('d3AskDonut');
+  if (!container || typeof d3 === 'undefined') return;
+
+  const data = [
+    { label: 'U.S. Expansion', value: 63, amount: '$18.9M', color: '#FF6400', desc: 'Customer acquisition, community GTM, 10-state rollout' },
+    { label: 'Balance Sheet', value: 15, amount: '$4.5M', color: '#FFA000', desc: 'Cash reserves for 18+ months runway' },
+    { label: 'Team & Ops', value: 14, amount: '$4.2M', color: '#5A00B4', desc: '~73 new FTEs' },
+    { label: 'Product & R&D', value: 8, amount: '$2.4M', color: '#7B2FD4', desc: 'U.S. payment rails, regulatory tech' }
+  ];
+
+  const size = Math.min(280, container.clientWidth);
+  const radius = size / 2;
+  const innerRadius = radius * 0.62;
+
+  const svg = d3.select(container)
+    .insert('svg', ':first-child')
+    .attr('width', size)
+    .attr('height', size)
+    .append('g')
+    .attr('transform', `translate(${radius},${radius})`);
+
+  const pie = d3.pie().value(d => d.value).sort(null).padAngle(0.03);
+  const arc = d3.arc().innerRadius(innerRadius).outerRadius(radius).cornerRadius(4);
+  const arcHover = d3.arc().innerRadius(innerRadius - 3).outerRadius(radius + 8).cornerRadius(4);
+
+  const tooltip = document.getElementById('donutTooltip');
+  const center = document.getElementById('donutCenter');
+  const blocks = document.querySelectorAll('.ask-block');
+
+  const arcs = svg.selectAll('.d3-arc')
+    .data(pie(data))
+    .enter()
+    .append('path')
+    .attr('class', 'd3-arc')
+    .attr('fill', d => d.data.color)
+    .attr('d', arc)
+    .attr('opacity', 0)
+    .on('mouseenter', function(event, d) {
+      d3.select(this).transition().duration(200).attr('d', arcHover);
+      center.querySelector('.donut-val').textContent = d.data.amount;
+      center.querySelector('.donut-label').textContent = d.data.label;
+      // Highlight matching block
+      blocks.forEach((b, i) => b.style.transform = i === d.index ? 'translateY(-6px)' : '');
+      blocks.forEach((b, i) => b.style.borderColor = i === d.index ? d.data.color : '');
+    })
+    .on('mouseleave', function(event, d) {
+      d3.select(this).transition().duration(200).attr('d', arc);
+      center.querySelector('.donut-val').textContent = '$30M';
+      center.querySelector('.donut-label').textContent = 'allocation';
+      blocks.forEach(b => { b.style.transform = ''; b.style.borderColor = ''; });
+    });
+
+  // Animate in
+  arcs.transition()
+    .duration(800)
+    .delay((d, i) => i * 150)
+    .ease(d3.easeCubicOut)
+    .attr('opacity', 1)
+    .attrTween('d', function(d) {
+      const interp = d3.interpolate({ startAngle: d.startAngle, endAngle: d.startAngle }, d);
+      return t => arc(interp(t));
+    });
+
+  // Block hover syncs with donut
+  blocks.forEach((block, i) => {
+    block.addEventListener('mouseenter', () => {
+      const arcEl = arcs.filter((d, j) => j === i);
+      arcEl.transition().duration(200).attr('d', arcHover);
+      center.querySelector('.donut-val').textContent = data[i].amount;
+      center.querySelector('.donut-label').textContent = data[i].label;
+    });
+    block.addEventListener('mouseleave', () => {
+      const arcEl = arcs.filter((d, j) => j === i);
+      arcEl.transition().duration(200).attr('d', arc);
+      center.querySelector('.donut-val').textContent = '$30M';
+      center.querySelector('.donut-label').textContent = 'allocation';
+    });
+  });
+}
+
+// ===== INIT D3 CHARTS (with IntersectionObserver for lazy loading) =====
+function initD3Charts() {
+  if (typeof d3 === 'undefined') return;
+
+  const chartObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !entry.target.dataset.d3init) {
+        entry.target.dataset.d3init = 'true';
+        const id = entry.target.id;
+        if (id === 'd3RevenueBar') initD3RevenueBar();
+        else if (id === 'd3RevenueProjection') initD3RevenueProjection();
+        else if (id === 'd3AskDonut') initD3AskDonut();
+      }
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll('#d3RevenueBar, #d3RevenueProjection, #d3AskDonut').forEach(el => {
+    chartObserver.observe(el);
+  });
+}
+
+// Add D3 chart init to the main init function
+const _origInitAll = initAll;
+initAll = function() {
+  _origInitAll();
+  initD3Charts();
+};
 </script>
 
 </body>
